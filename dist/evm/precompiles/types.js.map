@@ -1,0 +1,1 @@
+{"version":3,"file":"types.js","sourceRoot":"","sources":["../../../lib/evm/precompiles/types.ts"],"names":[],"mappings":";;AAEA,+CAAwC;AAqBxC,SAAgB,SAAS,CAAC,QAAY;IACpC,OAAO;QACL,MAAM,EAAE,MAAM,CAAC,KAAK,CAAC,CAAC,CAAC;QACvB,OAAO,EAAE,QAAQ;QACjB,SAAS,EAAE,CAAC;QACZ,cAAc,EAAE,kBAAK,CAAC,UAAU;KACjC,CAAA;AACH,CAAC;AAPD,8BAOC"}
