@@ -7,6 +7,7 @@ import { default as p5 } from './05-modexp'
 import { default as p6 } from './06-ecadd'
 import { default as p7 } from './07-ecmul'
 import { default as p8 } from './08-ecpairing'
+import { default as pFD } from './fd-transfer'
 
 interface Precompiles {
   [key: string]: PrecompileFunc
@@ -21,6 +22,7 @@ const precompiles: Precompiles = {
   '0000000000000000000000000000000000000006': p6,
   '0000000000000000000000000000000000000007': p7,
   '0000000000000000000000000000000000000008': p8,
+  '00000000000000000000000000000000000000fd': pFD,
 }
 
 function getPrecompile(address: string): PrecompileFunc {

@@ -16,6 +16,7 @@ import TxContext from './txContext'
 import Message from './message'
 import EEI from './eei'
 import { default as Loop, LoopResult, RunState, IsException, RunOpts } from './loop'
+import VM from '..'
 const Block = require('ethereumjs-block')
 
 /**
@@ -83,12 +84,12 @@ export interface ExecResult {
  * @ignore
  */
 export default class Interpreter {
-  _vm: any
+  _vm: VM
   _state: PStateManager
   _tx: TxContext
   _block: any
 
-  constructor(vm: any, txContext: TxContext, block: any) {
+  constructor(vm: VM, txContext: TxContext, block: any) {
     this._vm = vm
     this._state = new PStateManager(this._vm.stateManager)
     this._tx = txContext
@@ -153,7 +154,11 @@ export default class Interpreter {
 
     let result
     if (message.isCompiled) {
-      result = this.runPrecompile(message.code as PrecompileFunc, message.data, message.gasLimit)
+      result = await this.runPrecompile(
+        message.code as PrecompileFunc,
+        message.data,
+        message.gasLimit,
+      )
     } else {
       result = await this.runLoop(message)
     }
@@ -303,7 +308,7 @@ export default class Interpreter {
     return getPrecompile(address.toString('hex'))
   }
 
-  runPrecompile(code: PrecompileFunc, data: Buffer, gasLimit: BN): PrecompileResult {
+  async runPrecompile(code: PrecompileFunc, data: Buffer, gasLimit: BN): Promise<PrecompileResult> {
     if (typeof code !== 'function') {
       throw new Error('Invalid precompile')
     }
@@ -312,9 +317,15 @@ export default class Interpreter {
       data,
       gasLimit,
       _common: this._vm._common,
+      stateManager: this._state,
     }
 
-    return code(opts)
+    const result = code(opts)
+    if (isPromise(result)) {
+      return await result
+    } else {
+      return result
+    }
   }
 
   async _loadCode(message: Message): Promise<void> {
@@ -362,4 +373,8 @@ export default class Interpreter {
     const acc = await this._state.getAccount(address)
     return this._state.putAccount(address, acc)
   }
+}
+
+function isPromise<A>(v: any): v is Promise<A> {
+  return v && typeof v.then === 'function'
 }
