@@ -5,19 +5,27 @@ const Trie = require('merkle-patricia-tree/secure')
 const Block = require('ethereumjs-block')
 const Blockchain = require('ethereumjs-blockchain')
 const BlockHeader = require('ethereumjs-block/header.js')
-const Level = require('levelup')
+const level = require('level')
+const levelMem = require('level-mem')
 
-var cacheDB = new Level('./.cachedb')
+var cacheDB = level('./.cachedb')
 module.exports = function runBlockchainTest (options, testData, t, cb) {
-  var blockchainDB = new Level('', {
-    db: require('memdown')
-  })
+  var blockchainDB = levelMem()
   var state = new Trie()
+  var validate = false
+  // Only run with block validation when sealEngine present in test file
+  // and being set to Ethash PoW validation
+  if (testData.sealEngine && testData.sealEngine === 'Ethash') {
+    validate = true
+  }
   var blockchain = new Blockchain({
     db: blockchainDB,
-    hardfork: options.forkConfig.toLowerCase()
+    hardfork: options.forkConfig.toLowerCase(),
+    validate: validate
   })
-  blockchain.ethash.cacheDB = cacheDB
+  if (validate) {
+    blockchain.ethash.cacheDB = cacheDB
+  }
   var VM
   if (options.dist) {
     VM = require('../dist/index.js')
