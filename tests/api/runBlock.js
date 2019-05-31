@@ -2,7 +2,7 @@ const { promisify } = require('util')
 const tape = require('tape')
 const Block = require('ethereumjs-block')
 const Transaction = require('ethereumjs-tx')
-const Common = require('ethereumjs-common').default
+const Common = require('ethereumjs-common')
 const util = require('ethereumjs-util')
 const runBlock = require('../../lib/runBlock')
 const StateManager = require('../../lib/stateManager')
@@ -20,6 +20,7 @@ function setup (vm = null) {
     vm = {
       stateManager,
       emit: (e, val, cb) => cb(),
+      populateCache: stateManager.warmCache.bind(stateManager),
       runTx: (opts, cb) => cb(new Error('test')),
       runCall: (opts, cb) => cb(new Error('test')),
       _common: new Common('mainnet', 'byzantium')
@@ -32,7 +33,7 @@ function setup (vm = null) {
     p: {
       runBlock: promisify(runBlock.bind(vm)),
       putAccount: promisify(vm.stateManager.putAccount.bind(vm.stateManager)),
-      generateCanonicalGenesis: promisify(vm.stateManager.generateCanonicalGenesis.bind(vm.stateManager))
+      cacheFlush: promisify(vm.stateManager.cache.flush.bind(vm.stateManager.cache))
     }
   }
 }
@@ -41,7 +42,7 @@ tape('runBlock', async (t) => {
   const suite = setup()
 
   t.test('should fail without params', async (st) => {
-    await suite.p.runBlock()
+    suite.p.runBlock()
       .then(() => st.fail('should have returned error'))
       .catch((e) => st.ok(e.message.includes('invalid input'), 'correct error'))
 
@@ -49,7 +50,7 @@ tape('runBlock', async (t) => {
   })
 
   t.test('should fail without opts', async (st) => {
-    await suite.p.runBlock({})
+    suite.p.runBlock({})
       .then(() => st.fail('should have returned error'))
       .catch((e) => st.ok(e.message.includes('invalid input'), 'correct error'))
 
@@ -57,13 +58,12 @@ tape('runBlock', async (t) => {
   })
 
   t.test('should fail when runTx fails', async (st) => {
+    const genesis = createGenesis()
     const block = new Block(util.rlp.decode(suite.data.blocks[0].rlp))
-
-    await suite.p.generateCanonicalGenesis()
 
     // The mocked VM uses a mocked runTx
     // which always returns an error.
-    await suite.p.runBlock({ block, skipBlockValidation: true })
+    await suite.p.runBlock({ block, root: genesis.header.stateRoot })
       .then(() => t.fail('should have returned error'))
       .catch((e) => t.equal(e.message, 'test'))
 
@@ -71,46 +71,13 @@ tape('runBlock', async (t) => {
   })
 })
 
-tape('should fail when block gas limit higher than 2^63-1', async (t) => {
-  const suite = setup()
-
-  const genesis = createGenesis()
-  const block = new Block({
-    header: {
-      ...suite.data.blocks[0].header,
-      gasLimit: Buffer.from('8000000000000000', 16)
-    }
-  })
-  await suite.p.runBlock({ block, root: genesis.header.stateRoot })
-    .then(() => t.fail('should have returned error'))
-    .catch((e) => t.ok(e.message.includes('Invalid block')))
-
-  t.end()
-})
-
-tape('should fail when block validation fails', async (t) => {
-  const suite = setup()
-
-  const genesis = createGenesis()
-  const block = new Block(util.rlp.decode(suite.data.blocks[0].rlp))
-  block.validate = (_, cb) => cb(new Error('test'))
-
-  await suite.p.runBlock({ block, root: genesis.header.stateRoot })
-    .then(() => t.fail('should have returned error'))
-    .catch((e) => t.ok(e.message.includes('test')))
-
-  t.end()
-})
-
 tape('should fail when tx gas limit higher than block gas limit', async (t) => {
   const suite = setup()
 
+  const genesis = createGenesis()
   const block = new Block(util.rlp.decode(suite.data.blocks[0].rlp))
   block.transactions[0].gasLimit = Buffer.from('3fefba', 'hex')
-
-  await suite.p.generateCanonicalGenesis()
-
-  await suite.p.runBlock({ block, skipBlockValidation: true })
+  suite.p.runBlock({ block, root: genesis.header.stateRoot })
     .then(() => t.fail('should have returned error'))
     .catch((e) => t.ok(e.message.includes('higher gas limit')))
 
@@ -127,16 +94,13 @@ tape('should fail when runCall fails', async (t) => {
     const acc = createAccount()
     await suite.p.putAccount(tx.from.toString('hex'), acc)
   }
-
-  await suite.p.generateCanonicalGenesis()
+  await suite.p.cacheFlush()
 
   // The mocked VM uses a mocked runCall
   // which always returns an error.
   // runTx is a full implementation that works.
   suite.vm.runTx = runTx
-
-  await suite.p.runBlock({ block, skipBlockValidation: true })
-
+  await suite.p.runBlock({ block, root: suite.vm.stateManager.trie.root })
     .then(() => t.fail('should have returned error'))
     .catch((e) => t.equal(e.message, 'test'))
 
@@ -151,16 +115,15 @@ tape('should run valid block', async (t) => {
   const block = new Block(util.rlp.decode(suite.data.blocks[0].rlp))
 
   const setupPreP = promisify(setupPreConditions)
-  await setupPreP(suite.vm.stateManager._trie, suite.data)
+  await setupPreP(suite.vm.stateManager.trie, suite.data)
 
   t.equal(
-    suite.vm.stateManager._trie.root.toString('hex'),
+    suite.vm.stateManager.trie.root.toString('hex'),
     genesis.header.stateRoot.toString('hex'),
     'genesis state root should match calculated state root'
   )
 
-  let res = await suite.p.runBlock({ block, root: suite.vm.stateManager._trie.root, skipBlockValidation: true })
-
+  let res = await suite.p.runBlock({ block, root: suite.vm.stateManager.trie.root })
   t.error(res.error, 'runBlock shouldn\'t have returned error')
   t.equal(res.results[0].gasUsed.toString('hex'), '5208', 'actual gas used should equal blockHeader gasUsed')
 

@@ -1,6 +1,6 @@
 const Block = require('ethereumjs-block')
 const Account = require('ethereumjs-account')
-const level = require('level-mem')
+const Level = require('levelup')
 const Blockchain = require('ethereumjs-blockchain')
 const VM = require('../../lib/index')
 
@@ -11,19 +11,26 @@ function createGenesis () {
   return genesis
 }
 
-function createAccount (nonce, balance) {
+function createAccount () {
   const raw = {
-    nonce: nonce || '0x00',
-    balance: balance || '0xfff384'
+    nonce: '0x00',
+    balance: '0xfff384'
   }
   const acc = new Account(raw)
   return acc
 }
 
 function setupVM () {
-  const db = level()
+  const db = new Level('', {
+    db: require('memdown')
+  })
+  const cacheDB = new Level('./.cachedb')
   const blockchain = new Blockchain(db)
-  const vm = new VM({ blockchain })
+  blockchain.ethash.cachedb = cacheDB
+
+  const vm = new VM({
+    blockchain
+  })
 
   return vm
 }
