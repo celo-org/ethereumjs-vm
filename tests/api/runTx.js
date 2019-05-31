@@ -18,7 +18,8 @@ function setup (vm = null) {
   return {
     vm,
     runTx: promisify(runTx.bind(vm)),
-    putAccount: promisify(vm.stateManager.putAccount.bind(vm.stateManager))
+    putAccount: promisify(vm.stateManager.putAccount.bind(vm.stateManager)),
+    cacheFlush: promisify(vm.stateManager.cache.flush.bind(vm.stateManager.cache))
   }
 }
 
@@ -62,6 +63,7 @@ tape('should fail when runCall fails', async (t) => {
   const tx = getTransaction(true, true)
   const acc = createAccount()
   await suite.putAccount(tx.from.toString('hex'), acc)
+  await suite.cacheFlush()
 
   shouldFail(t,
     suite.runTx({ tx, populateCache: true }),
@@ -78,6 +80,7 @@ tape('should run simple tx without errors', async (t) => {
   const tx = getTransaction(true, true)
   const acc = createAccount()
   await suite.putAccount(tx.from.toString('hex'), acc)
+  await suite.cacheFlush()
 
   let res = await suite.runTx({ tx, populateCache: true })
   t.true(res.gasUsed.gt(0), 'should have used some gas')

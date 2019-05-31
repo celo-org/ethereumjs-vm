@@ -1,5 +1,6 @@
 const tape = require('tape')
-const level = require('level-mem')
+const Levelup = require('levelup')
+const Memdown = require('memdown')
 const { promisify } = require('util')
 const Blockchain = require('ethereumjs-blockchain')
 const Block = require('ethereumjs-block')
@@ -9,7 +10,7 @@ const StateManager = require('../../lib/stateManager')
 const { createGenesis } = require('./utils')
 
 tape('runBlockchain', (t) => {
-  const blockchainDB = level()
+  const blockchainDB = new Levelup('', { db: Memdown })
   const blockchain = new Blockchain({ db: blockchainDB })
   const vm = { stateManager: new StateManager(), blockchain }
 
@@ -88,7 +89,6 @@ function createBlock (parent = null, n = 0) {
   b.header.number = util.toBuffer(n)
   b.header.parentHash = parent.hash()
   b.header.difficulty = '0xfffffff'
-  b.header.stateRoot = parent.header.stateRoot
 
   return b
 }

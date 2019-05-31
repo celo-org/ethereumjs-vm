@@ -3,7 +3,6 @@ const testUtil = require('./util')
 const Trie = require('merkle-patricia-tree/secure')
 const ethUtil = require('ethereumjs-util')
 const BN = ethUtil.BN
-const { getRequiredForkConfigAlias } = require('./util')
 
 function parseTestCases (forkConfig, testData, data, gasLimit, value) {
   let testCases = []
@@ -126,19 +125,18 @@ function runTestCase (options, testData, t, cb) {
 }
 
 module.exports = function runStateTest (options, testData, t, cb) {
-  const forkConfig = getRequiredForkConfigAlias(options.forkConfig)
   try {
-    const testCases = parseTestCases(forkConfig, testData, options.data, options.gasLimit, options.value)
+    const testCases = parseTestCases(options.forkConfig, testData, options.data, options.gasLimit, options.value)
     if (testCases.length > 0) {
       async.eachSeries(testCases,
                       (testCase, done) => runTestCase(options, testCase, t, done),
                       cb)
     } else {
-      t.comment(`No ${forkConfig} post state defined, skip test`)
+      t.comment(`No ${options.forkConfig} post state defined, skip test`)
       cb()
     }
   } catch (e) {
-    t.fail('error running test case for fork: ' + forkConfig)
+    t.fail('error running test case for fork: ' + options.forkConfig)
     console.log('error:', e)
     cb()
   }
