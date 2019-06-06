@@ -44,8 +44,10 @@ module.exports = function (opts, cb) {
     return;
   }
 
-  var fromAddress = opts.data.slice(0, 32);
-  var toAddress = opts.data.slice(32, 64);
+  // data is the ABI encoding for [address,address,uint256]
+  // 32 bytes each, but the addresses only use 20 bytes.
+  var fromAddress = opts.data.slice(12, 32);
+  var toAddress = opts.data.slice(44, 64);
   var value = new BN(opts.data.slice(64, 96));
 
   var failIfErr = function failIfErr(err) {
