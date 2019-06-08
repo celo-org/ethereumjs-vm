@@ -21,6 +21,7 @@ var num06 = require('./precompiled/06-ecadd.js');
 var num07 = require('./precompiled/07-ecmul.js');
 var num08 = require('./precompiled/08-ecpairing.js');
 var numfd = require('./precompiled/fd-transfer.js');
+var numfc = require('./precompiled/fc-fractionmulexp.js');
 
 module.exports = VM;
 
@@ -82,6 +83,7 @@ VM.deps = {
   this._precompiled['0000000000000000000000000000000000000007'] = num07;
   this._precompiled['0000000000000000000000000000000000000008'] = num08;
   this._precompiled['00000000000000000000000000000000000000fd'] = numfd;
+  this._precompiled['00000000000000000000000000000000000000fc'] = numfc;
 
   this._precompiledAsPromise = {};
   this._precompiledAsPromise['00000000000000000000000000000000000000fd'] = true;
