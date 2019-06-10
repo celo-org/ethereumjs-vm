@@ -1,16 +1,18 @@
-const assert = require('assert')
-const utils = require('ethereumjs-util')
-const byteSize = 256
+'use strict';
+
+var assert = require('assert');
+var utils = require('ethereumjs-util');
+var byteSize = 256;
 
 /**
  * drops leading zeroes from a buffer
  * @function dropLeadingZeroes
  * @param {Buffer} buff
  */
-function dropLeadingZeroes (buff) {
+function dropLeadingZeroes(buff) {
   for (var i = 0; i < buff.length; i++) {
     if (buff[i] !== 0) {
-      return buff.slice(i)
+      return buff.slice(i);
     }
   }
 }
@@ -22,12 +24,12 @@ function dropLeadingZeroes (buff) {
  */
 var Bloom = module.exports = function (bitvector) {
   if (!bitvector) {
-    this.bitvector = utils.zeros(byteSize)
+    this.bitvector = utils.zeros(byteSize);
   } else {
-    assert(bitvector.length === byteSize, 'bitvectors must be 2048 bits long')
-    this.bitvector = bitvector
+    assert(bitvector.length === byteSize, 'bitvectors must be 2048 bits long');
+    this.bitvector = bitvector;
   }
-}
+};
 
 /**
  * adds an element to a bit vector of a 64 byte bloom filter
@@ -35,17 +37,17 @@ var Bloom = module.exports = function (bitvector) {
  * @param {Buffer} element
  */
 Bloom.prototype.add = function (e) {
-  e = utils.keccak256(dropLeadingZeroes(e))
-  var mask = 2047 // binary 11111111111
+  e = utils.keccak256(dropLeadingZeroes(e));
+  var mask = 2047; // binary 11111111111
 
   for (var i = 0; i < 3; i++) {
-    var first2bytes = e.readUInt16BE(i * 2)
-    var loc = mask & first2bytes
-    var byteLoc = loc >> 3
-    var bitLoc = 1 << loc % 8
-    this.bitvector[byteSize - byteLoc - 1] |= bitLoc
+    var first2bytes = e.readUInt16BE(i * 2);
+    var loc = mask & first2bytes;
+    var byteLoc = loc >> 3;
+    var bitLoc = 1 << loc % 8;
+    this.bitvector[byteSize - byteLoc - 1] |= bitLoc;
   }
-}
+};
 
 /**
  * checks if an element is in the blooom
@@ -53,20 +55,20 @@ Bloom.prototype.add = function (e) {
  * @param {Buffer} element
  */
 Bloom.prototype.check = function (e) {
-  e = utils.keccak256(dropLeadingZeroes(e))
-  var mask = 2047 // binary 11111111111
-  var match = true
+  e = utils.keccak256(dropLeadingZeroes(e));
+  var mask = 2047; // binary 11111111111
+  var match = true;
 
   for (var i = 0; i < 3 && match; i++) {
-    var first2bytes = e.readUInt16BE(i * 2)
-    var loc = mask & first2bytes
-    var byteLoc = loc >> 3
-    var bitLoc = 1 << loc % 8
-    match = (this.bitvector[byteSize - byteLoc - 1] & bitLoc)
+    var first2bytes = e.readUInt16BE(i * 2);
+    var loc = mask & first2bytes;
+    var byteLoc = loc >> 3;
+    var bitLoc = 1 << loc % 8;
+    match = this.bitvector[byteSize - byteLoc - 1] & bitLoc;
   }
 
-  return Boolean(match)
-}
+  return Boolean(match);
+};
 
 /**
  * checks if multple topics are in a bloom
@@ -74,11 +76,11 @@ Bloom.prototype.check = function (e) {
  * @param {Buffer} element
  */
 Bloom.prototype.multiCheck = function (topics) {
-  var self = this
+  var self = this;
   return topics.every(function (t) {
-    return self.check(t)
-  })
-}
+    return self.check(t);
+  });
+};
 
 /**
  * bitwise or blooms together
@@ -88,7 +90,7 @@ Bloom.prototype.multiCheck = function (topics) {
 Bloom.prototype.or = function (bloom) {
   if (bloom) {
     for (var i = 0; i <= byteSize; i++) {
-      this.bitvector[i] = this.bitvector[i] | bloom.bitvector[i]
+      this.bitvector[i] = this.bitvector[i] | bloom.bitvector[i];
     }
   }
-}
+};
