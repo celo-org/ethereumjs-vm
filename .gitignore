@@ -69,5 +69,5 @@ package-lock.json
 yarn.lock
 
 # Build folder
-dist
+#dist
 
