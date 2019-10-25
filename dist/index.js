@@ -32,6 +32,7 @@ var num07 = require('./evm/precompiles/07-ecmul.js');
 var num08 = require('./evm/precompiles/08-ecpairing.js');
 var numfd = require('./evm/precompiles/fd-transfer.js');
 var numfc = require('./evm/precompiles/fc-fractionmulexp.js');
+var numf8 = require('./evm/precompiles/f8-epochsize.js');
 
 /**
  * VM Class, `new VM(opts)` creates a new VM object
@@ -73,6 +74,8 @@ module.exports = function (_AsyncEventEmitter) {
         }
       }
       trie.put(new BN(0xfd).toArrayLike(Buffer, 'be', 20), new Account().serialize());
+      trie.put(new BN(0xfc).toArrayLike(Buffer, 'be', 20), new Account().serialize());
+      trie.put(new BN(0xf8).toArrayLike(Buffer, 'be', 20), new Account().serialize());
 
       _this.stateManager = new StateManager({ trie: trie, common: _this._common });
     }
@@ -94,6 +97,7 @@ module.exports = function (_AsyncEventEmitter) {
     _this._precompiled['0000000000000000000000000000000000000008'] = num08;
     _this._precompiled['00000000000000000000000000000000000000fd'] = numfd;
     _this._precompiled['00000000000000000000000000000000000000fc'] = numfc;
+    _this._precompiled['00000000000000000000000000000000000000f8'] = numf8;
 
     _this._precompiledAsPromise = {};
     _this._precompiledAsPromise['00000000000000000000000000000000000000fd'] = true;
