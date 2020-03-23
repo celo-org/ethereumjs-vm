@@ -21,9 +21,11 @@ export interface Func {
   (opts: PrecompileInput): ExecResult
 }
 
-function toAsync(a: Func) : PrecompileFunc {
-  return async function (opts: PrecompileInput) { return a(opts) }
-} 
+function toAsync(a: Func): PrecompileFunc {
+  return async function(opts: PrecompileInput) {
+    return a(opts)
+  }
+}
 
 const ripemdPrecompileAddress = '0000000000000000000000000000000000000003'
 const precompiles: Precompiles = {

@@ -169,7 +169,11 @@ export default class EVM {
 
     let result: ExecResult
     if (message.isCompiled) {
-      result = await this.runPrecompile(message.code as PrecompileFunc, message.data, message.gasLimit)
+      result = await this.runPrecompile(
+        message.code as PrecompileFunc,
+        message.data,
+        message.gasLimit,
+      )
     } else {
       result = await this.runInterpreter(message)
     }
@@ -344,7 +348,7 @@ export default class EVM {
       data,
       gasLimit,
       _common: this._vm._common,
-      _state: this._state
+      _state: this._state,
     }
 
     return code(opts)

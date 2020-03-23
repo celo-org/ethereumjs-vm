@@ -35,9 +35,7 @@ export default function(opts: PrecompileInput): ExecResult {
 
   const decimalAdjustment = new BN(10).pow(decimals)
 
-  const numeratorDecimalAdjusted = numeratorExp
-    .mul(decimalAdjustment)
-    .div(denominatorExp)
+  const numeratorDecimalAdjusted = numeratorExp.mul(decimalAdjustment).div(denominatorExp)
   const denominatorDecimalAdjusted = decimalAdjustment
 
   const numeratorBuf = numeratorDecimalAdjusted.toArrayLike(Buffer, 'be', 32)

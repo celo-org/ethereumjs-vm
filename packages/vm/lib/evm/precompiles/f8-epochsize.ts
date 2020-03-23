@@ -12,6 +12,6 @@ export default function(opts: PrecompileInput): ExecResult {
   const sizeBuf = new BN(100).toArrayLike(Buffer, 'be', 32)
   return {
     returnValue: setLengthLeft(sizeBuf, 32),
-    gasUsed
+    gasUsed,
   }
 }
