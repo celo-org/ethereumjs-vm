@@ -2,6 +2,7 @@ import BN = require('bn.js')
 import { PrecompileInput } from './types'
 import { OOGResult, ExecResult } from '../evm'
 import { VmError, ERROR } from '../../exceptions'
+import { setLengthLeft } from 'ethereumjs-util'
 const assert = require('assert')
 
 export default function(opts: PrecompileInput): ExecResult {
@@ -42,8 +43,8 @@ export default function(opts: PrecompileInput): ExecResult {
   const numeratorBuf = numeratorDecimalAdjusted.toArrayLike(Buffer, 'be', 32)
   const denominatorBuf = denominatorDecimalAdjusted.toArrayLike(Buffer, 'be', 32)
 
-  const numeratorPadded = utils.setLength(numeratorBuf, 32)
-  const denominatorPadded = utils.setLength(denominatorBuf, 32)
+  const numeratorPadded = setLengthLeft(numeratorBuf, 32)
+  const denominatorPadded = setLengthLeft(denominatorBuf, 32)
 
   const returnValue = Buffer.concat([numeratorPadded, denominatorPadded])
 

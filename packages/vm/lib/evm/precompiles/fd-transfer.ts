@@ -4,7 +4,7 @@ import { OOGResult, ExecResult } from '../evm'
 import PStateManager from '../../state/promisified'
 const assert = require('assert')
 
-async function incrementBalance (stateManager : PStateManager, address, delta) {
+async function incrementBalance (stateManager : PStateManager, address: Buffer, delta: BN) {
   const account = await stateManager.getAccount(address)
   account.balance = new BN(account.balance).add(delta).toBuffer()
   await stateManager.putAccount(address, account)
@@ -26,7 +26,7 @@ export default async function(opts: PrecompileInput): Promise<ExecResult> {
   const value = new BN(opts.data.slice(64, 96))
 
   await incrementBalance(opts._state, fromAddress, value.neg())
-  await incrementBalance(opts._state, toAddress, value.neg())
+  await incrementBalance(opts._state, toAddress, value)
   return {
     gasUsed,
     returnValue: Buffer.alloc(0)
