@@ -932,10 +932,7 @@ function getContractStorage(runState: RunState, address: Buffer, key: Buffer) {
 }
 
 function updateSstoreGas(runState: RunState, found: any, value: Buffer) {
-  if (
-    runState._common.hardfork() === 'constantinople' ||
-    runState._common.hardfork() === 'istanbul'
-  ) {
+  if (runState._common.hardfork() === 'constantinople') {
     const original = found.original
     const current = found.current
     if (current.equals(value)) {
