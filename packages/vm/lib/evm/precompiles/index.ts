@@ -12,6 +12,7 @@ import { default as p9 } from './09-blake2f'
 import { default as pf8 } from './f8-epochsize'
 import { default as pfc } from './fc-fractionmulexp'
 import { default as pfd } from './fd-transfer'
+import { default as pec} from './ec-ecmapg1'
 
 interface Precompiles {
   [key: string]: PrecompileFunc
@@ -41,6 +42,7 @@ const precompiles: Precompiles = {
   '00000000000000000000000000000000000000f8': toAsync(pf8),
   '00000000000000000000000000000000000000fc': toAsync(pfc),
   '00000000000000000000000000000000000000fd': pfd,
+  '00000000000000000000000000000000000000ec': toAsync(pec),
 }
 
 function getPrecompile(address: string): PrecompileFunc {
