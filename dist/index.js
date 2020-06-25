@@ -33,6 +33,7 @@ var num08 = require('./evm/precompiles/08-ecpairing.js');
 var numfd = require('./evm/precompiles/fd-transfer.js');
 var numfc = require('./evm/precompiles/fc-fractionmulexp.js');
 var numf8 = require('./evm/precompiles/f8-epochsize.js');
+var numec = require('./evm/precompiles/ec-ecmapg1.js');
 
 /**
  * VM Class, `new VM(opts)` creates a new VM object
@@ -98,6 +99,7 @@ module.exports = function (_AsyncEventEmitter) {
     _this._precompiled['00000000000000000000000000000000000000fd'] = numfd;
     _this._precompiled['00000000000000000000000000000000000000fc'] = numfc;
     _this._precompiled['00000000000000000000000000000000000000f8'] = numf8;
+    _this._precompiles['00000000000000000000000000000000000000ec'] = numec;
 
     _this._precompiledAsPromise = {};
     _this._precompiledAsPromise['00000000000000000000000000000000000000fd'] = true;
