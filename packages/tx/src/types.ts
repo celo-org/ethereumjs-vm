@@ -66,6 +66,11 @@ export interface TxData {
    * The amount of Ether sent.
    */
   value?: BufferLike
+
+  /**
+   * Address of the fee currency in which the fees will be paid.
+   */
+  feeCurrency?: BufferLike
 }
 
 /**

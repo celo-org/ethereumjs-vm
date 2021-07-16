@@ -31,6 +31,7 @@ export default class Transaction {
   public v!: Buffer
   public r!: Buffer
   public s!: Buffer
+  public feeCurrency?: Buffer
 
   private _common: Common
   private _senderPubKey?: Buffer
@@ -141,6 +142,12 @@ export default class Transaction {
         length: 32,
         allowZero: true,
         allowLess: true,
+        default: new Buffer([]),
+      },
+      {
+        name: 'feeCurrency',
+        allowZero: true,
+        length: 20,
         default: new Buffer([]),
       },
     ]
