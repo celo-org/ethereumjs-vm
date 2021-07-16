@@ -16,7 +16,6 @@ import { default as pfd } from './fd-transfer'
 interface Precompiles {
   [key: string]: PrecompileFunc
 }
-
 export interface Func {
   (opts: PrecompileInput): ExecResult
 }

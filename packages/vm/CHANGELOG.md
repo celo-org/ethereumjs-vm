@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 (modification: no type change headlines) and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2020-05-05
+
+This is a maintenance release preceding the v5.
+
+**API**
+
+- Adding optional fields `skipNonce` and `skipBalance` to the [`runBlock`](https://github.com/ethereum-ts/ethereumjs-vm/blob/46a79d7c3e3e38343e285fc1d15cc8b51f378609/lib/runBlock.ts#L81) function
+  PR [#663](https://github.com/ethereumjs/ethereumjs-vm/pull/663)
+- Added `codeAddress` to the `step` event, allowing to have an address disambiguation when running `DELEGATECALL` or `CALLCODE`
+  PR [#651](https://github.com/ethereumjs/ethereumjs-vm/pull/651)
+
+**Fixes**
+
+- Properly copying BigNumbers on stack.
+  PR [#733](https://github.com/ethereumjs/ethereumjs-vm/pull/733)
+- Fixes installation on Node 12, by bumping `level` dependency from `^4.0.0` to `^6.0.0`
+  PR [#662](https://github.com/ethereumjs/ethereumjs-vm/pull/662)
+
+**Internal**
+
+- StateManager tests are now ran in the browser context as well.
+  PR [#653](https://github.com/ethereumjs/ethereumjs-vm/pull/653)
+- Run tests with `ts-node`
+  PRs [#654](https://github.com/ethereumjs/ethereumjs-vm/pull/654), [#658](https://github.com/ethereumjs/ethereumjs-vm/pull/658)
+
+[4.2.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.1.3...%40ethereumjs%2Fvm%404.1.4
+
 ## [4.1.3] - 2020-01-09
 
 This release fixes a critical bug preventing the `MuirGlacier` release `4.1.2`
@@ -26,7 +53,7 @@ working properly, an update is mandatory if you want a working installation.
 - Run consensus tests on `MuirGlacier`,
   PR [#648](https://github.com/ethereumjs/ethereumjs-vm/pull/648)
 
-[4.1.3]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.1.2...%40ethereumjs%2Fvm%404.1.3
+[4.1.3]: https://github.com/ethereumjs/ethereumjs-vm/compare/v4.1.2...v4.1.3
 
 ## [4.1.2] - 2019-12-19 [DEPRECATED]
 
@@ -55,7 +82,7 @@ Other changes:
 - Properly output zero balance in `examples/run-transactions-complete`,
   PR [#624](https://github.com/ethereumjs/ethereumjs-vm/pull/624)
 
-[4.1.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.1.1...%40ethereumjs%2Fvm%404.1.2
+[4.1.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/v4.1.1...v4.1.2
 
 ## [4.1.1] - 2019-11-19
 
@@ -95,7 +122,7 @@ you upgrade from the first `beta` `Istanbul` release `v4.1.0`.
 - Improved event documentation,
   PR [#601](https://github.com/ethereumjs/ethereumjs-vm/pull/601)
 
-[4.1.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.1.0...%40ethereumjs%2Fvm%404.1.1
+[4.1.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/v4.1.0...v4.1.1
 
 ## [4.1.0] - 2019-09-12
 
@@ -160,7 +187,7 @@ Added EIPs:
   VM option,
   PR [#595](https://github.com/ethereumjs/ethereumjs-vm/pull/595)
 
-[4.1.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.0.0...%40ethereumjs%2Fvm%404.1.0
+[4.1.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v4.0.0...v4.1.0
 
 ## [4.0.0] - 2019-08-06
 
@@ -184,7 +211,7 @@ release for full release notes.
   having a 32-byte length),
   PR [#565](https://github.com/ethereumjs/ethereumjs-vm/pull/565)
 
-[4.0.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%404.0.0...%40ethereumjs%2Fta.1...v4.0.0
+[4.0.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v4.0.0-beta.1...v4.0.0
 
 ## [4.0.0-beta.1] - 2019-06-19
 
@@ -408,7 +435,7 @@ try {
 - Significant blockchain test speed improvements,
   PR [#536](https://github.com/ethereumjs/ethereumjs-vm/pull/536)
 
-[4.0.0-beta.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%403.0.0...%40ethereumjs%2Fvm%404.0.0-beta.1
+[4.0.0-beta.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/v3.0.0...v4.0.0-beta.1
 
 ## [3.0.0] - 2019-03-29
 
@@ -497,7 +524,7 @@ issue [#455](https://github.com/ethereumjs/ethereumjs-vm/issues/455).
 - Fixed `ecmul_0-3_5616_28000_96` (by test setup adoption),
   PR [#473](https://github.com/ethereumjs/ethereumjs-vm/pull/473)
 
-[3.0.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.6.0...%40ethereumjs%2Fvm%403.0.0
+[3.0.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.6.0...v3.0.0
 
 ## [2.6.0] - 2019-02-07
 
@@ -546,7 +573,7 @@ on parts of the VM:
 - Converted `Cache` to `ES6` class, added unit tests,
   PR [427](https://github.com/ethereumjs/ethereumjs-vm/pull/427)
 
-[2.6.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.5.1...%40ethereumjs%2Fvm%402.6.0
+[2.6.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.5.1...v2.6.0
 
 ## [2.5.1] - 2019-01-19
 
@@ -572,7 +599,7 @@ on parts of the VM:
 - Fixed issue when running code coverage on PRs from forks,
   PR [#402](https://github.com/ethereumjs/ethereumjs-vm/pull/402)
 
-[2.5.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.5.0...%40ethereumjs%2Fvm%402.5.1
+[2.5.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.5.0...v2.5.1
 
 ## [2.5.0] - 2018-11-21
 
@@ -663,7 +690,7 @@ Beyond this release contains contributions from the following people:
 
 Thank you all very much, and thanks @axic for keeping an ongoing eye on overall library quality!
 
-[2.5.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.4.0...%40ethereumjs%2Fvm%402.5.0
+[2.5.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.4.0...v2.5.0
 
 ## [2.4.0] - 2018-07-27
 
@@ -710,7 +737,7 @@ All the changes from this release:
 - Fix a bug when `REVERT` is used within a `CREATE` context, see PR [#297](https://github.com/ethereumjs/ethereumjs-vm/pull/297)
 - Fix a bug in `FakeBlockChain` error handing, see PR [#320](https://github.com/ethereumjs/ethereumjs-vm/pull/320)
 
-[2.4.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.3.5...%40ethereumjs%2Fvm%402.4.0
+[2.4.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.3.5...v2.4.0
 
 ## [2.3.5] - 2018-04-25
 
@@ -719,7 +746,7 @@ All the changes from this release:
 - New `stateManager.copy()` function, PR [#276](https://github.com/ethereumjs/ethereumjs-vm/pull/276)
 - Updated Circle CI configuration to 2.0 format, PR [#292](https://github.com/ethereumjs/ethereumjs-vm/pull/292)
 
-[2.3.5]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.3.4...%40ethereumjs%2Fvm%402.3.5
+[2.3.5]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.3.4...v2.3.5
 
 ## [2.3.4] - 2018-04-06
 
@@ -731,7 +758,7 @@ All the changes from this release:
 - Properly calculate totalgas for large return values, PR [#275](https://github.com/ethereumjs/ethereumjs-vm/pull/275)
 - Improve iterateVm check output after step hook, PR [#279](https://github.com/ethereumjs/ethereumjs-vm/pull/279)
 
-[2.3.4]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.3.3...%40ethereumjs%2Fvm%402.3.4
+[2.3.4]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.3.3...v2.3.4
 
 ## [2.3.3] - 2018-02-02
 
@@ -746,7 +773,7 @@ All the changes from this release:
 - Fix error on large return fees, PR [#235](https://github.com/ethereumjs/ethereumjs-vm/pull/235)
 - Various bug fixes
 
-[2.3.3]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.3.2...%40ethereumjs%2Fvm%402.3.3
+[2.3.3]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.3.2...v2.3.3
 
 ## [2.3.2] - 2017-10-29
 
@@ -755,7 +782,7 @@ All the changes from this release:
 - Testing improvements (separate skip lists)
 - Minor optimizations and bug fixes
 
-[2.3.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.3.1...%40ethereumjs%2Fvm%402.3.2
+[2.3.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.3.1...v2.3.2
 
 ## [2.3.1] - 2017-10-11
 
@@ -766,7 +793,7 @@ All the changes from this release:
 - For detailed list of changes see PR [#161](https://github.com/ethereumjs/ethereumjs-vm/pull/161)
 - For a `Spurious Dragon`/`EIP 150` compatible version of this library install latest version of `2.2.x`
 
-[2.3.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.2.2...%40ethereumjs%2Fvm%402.3.1
+[2.3.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.2.2...v2.3.1
 
 ## [2.3.0] - Version Skipped due to faulty npm release
 
@@ -779,13 +806,13 @@ All the changes from this release:
 - Testing improvements
 - Narrowed down dependencies for library not to break after Byzantium release
 
-[2.2.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.2.1...%40ethereumjs%2Fvm%402.2.2
+[2.2.2]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.2.1...v2.2.2
 
 ## [2.2.1] - 2017-08-04
 
 - Fixed bug prevent the library to be used in the browser
 
-[2.2.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.2.0...%40ethereumjs%2Fvm%402.2.1
+[2.2.1]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.2.0...v2.2.1
 
 ## [2.2.0] - 2017-07-28
 
@@ -793,25 +820,25 @@ All the changes from this release:
 - Detailed list of changes in pull requests [#147](https://github.com/ethereumjs/ethereumjs-vm/pull/147) and [#143](https://github.com/ethereumjs/ethereumjs-vm/pull/143)
 - Removed `enableHomestead` option when creating a [ new VM object](https://github.com/ethereumjs/ethereumjs-vm#new-vmstatetrie-blockchain) (pre-Homestead fork rules not supported any more)
 
-[2.2.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.1.0...%40ethereumjs%2Fvm%402.2.0
+[2.2.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.1.0...v2.2.0
 
 ## [2.1.0] - 2017-06-28
 
 - Homestead compatible
 - update state test runner for General State Tests
 
-[2.1.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.0.1...%40ethereumjs%2Fvm%402.1.0
+[2.1.0]: https://github.com/ethereumjs/ethereumjs-vm/compare/v2.0.1...v2.1.0
 
 ## Older releases:
 
-- [2.0.1](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%402.0.0...%40ethereumjs%2Fvm%402.0.1) - 2016-10-31
-- [2.0.0](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.4.0...%40ethereumjs%2Fvm%402.0.0) - 2016-09-26
-- [1.4.0](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.3.0...%40ethereumjs%2Fvm%401.4.0) - 2016-05-20
-- [1.3.0](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.2.2...%40ethereumjs%2Fvm%401.3.0) - 2016-04-02
-- [1.2.2](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.2.1...%40ethereumjs%2Fvm%401.2.2) - 2016-03-31
-- [1.2.1](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.2.0...%40ethereumjs%2Fvm%401.2.1) - 2016-03-03
-- [1.2.0](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.1.0...%40ethereumjs%2Fvm%401.2.0) - 2016-02-27
-- [1.1.0](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.0.4...%40ethereumjs%2Fvm%401.1.0) - 2016-01-09
-- [1.0.4](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.0.3...%40ethereumjs%2Fvm%401.0.4) - 2015-12-18
-- [1.0.3](https://github.com/ethereumjs/ethereumjs-vm/compare/%40ethereumjs%2Fvm%401.0.0...%40ethereumjs%2Fvm%401.0.3) - 2015-11-27
+- [2.0.1](https://github.com/ethereumjs/ethereumjs-vm/compare/v2.0.0...v2.0.1) - 2016-10-31
+- [2.0.0](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.4.0...v2.0.0) - 2016-09-26
+- [1.4.0](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.3.0...v1.4.0) - 2016-05-20
+- [1.3.0](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.2.2...v1.3.0) - 2016-04-02
+- [1.2.2](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.2.1...v1.2.2) - 2016-03-31
+- [1.2.1](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.2.0...v1.2.1) - 2016-03-03
+- [1.2.0](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.1.0...v1.2.0) - 2016-02-27
+- [1.1.0](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.0.4...v1.1.0) - 2016-01-09
+- [1.0.4](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.0.3...v1.0.4) - 2015-12-18
+- [1.0.3](https://github.com/ethereumjs/ethereumjs-vm/compare/v1.0.0...v1.0.3) - 2015-11-27
 - 1.0.0 - 2015-10-06

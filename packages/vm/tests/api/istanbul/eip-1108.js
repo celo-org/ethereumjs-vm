@@ -6,7 +6,7 @@ const VM = require('../../../dist/index').default
 const { getPrecompile } = require('../../../dist/evm/precompiles')
 
 tape('Istanbul: EIP-1108 tests', (t) => {
-  t.test('ECADD', (st) => {
+  t.test('ECADD', async (st) => {
     const common = new Common('mainnet', 'istanbul')
     let vm = new VM({ common: common })
     let ECADD = getPrecompile('0000000000000000000000000000000000000006')
@@ -16,11 +16,11 @@ tape('Istanbul: EIP-1108 tests', (t) => {
       gasLimit: new BN(0xffff),
       _common: common
     })
-    st.deepEqual(result.gasUsed.toNumber(), 150, 'should use istanbul gas costs')
+    st.deepEqual((await result).gasUsed.toNumber(), 150, 'should use istanbul gas costs')
     st.end()
   })
 
-  t.test('ECMUL', (st) => {
+  t.test('ECMUL', async (st) => {
     const common = new Common('mainnet', 'istanbul')
     let vm = new VM({ common: common })
     let ECMUL = getPrecompile('0000000000000000000000000000000000000007')
@@ -30,11 +30,11 @@ tape('Istanbul: EIP-1108 tests', (t) => {
       gasLimit: new BN(0xffff),
       _common: common
     })
-    st.deepEqual(result.gasUsed.toNumber(), 6000, 'should use istanbul gas costs')
+    st.deepEqual((await result).gasUsed.toNumber(), 6000, 'should use istanbul gas costs')
     st.end()
   })
 
-  t.test('ECPAIRING', (st) => {
+  t.test('ECPAIRING', async (st) => {
     const common = new Common('mainnet', 'istanbul')
     let vm = new VM({ common: common })
     let ECPAIRING = getPrecompile('0000000000000000000000000000000000000008')
@@ -44,7 +44,7 @@ tape('Istanbul: EIP-1108 tests', (t) => {
       gasLimit: new BN(0xffffff),
       _common: common
     })
-    st.deepEqual(result.gasUsed.toNumber(), 113000, 'should use petersburg gas costs (k ^= 2 pairings)')
+    st.deepEqual((await result).gasUsed.toNumber(), 113000, 'should use petersburg gas costs (k ^= 2 pairings)')
     st.end()
   })
 })

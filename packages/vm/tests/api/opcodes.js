@@ -14,7 +14,7 @@ tape('getOpcodesForHF', (t) => {
 
   t.test('should correctly apply istanbul opcode when hf >= istanbul', (st) => {
     let c = new Common('mainnet', 'istanbul')
-    let opcodes = getOpcodesForHF(c)
+    let opcodes = getOpcodesForHF(c, true)
     st.equal(opcodes[CHAINID].name, 'CHAINID')
 
     c = new Common('mainnet', 'muirGlacier')
