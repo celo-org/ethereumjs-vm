@@ -6,6 +6,6 @@
   },
   "dependencies": {
     "ethereumjs-abi": "^0.6.7",
-    "solc": "^0.5.10"
+    "solc": "^0.8.6"
   }
 }
