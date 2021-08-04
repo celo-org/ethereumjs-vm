@@ -169,7 +169,11 @@ export default class EVM {
 
     let result: ExecResult
     if (message.isCompiled) {
-      result = this.runPrecompile(message.code as PrecompileFunc, message.data, message.gasLimit)
+      result = await this.runPrecompile(
+        message.code as PrecompileFunc,
+        message.data,
+        message.gasLimit,
+      )
     } else {
       result = await this.runInterpreter(message)
     }
@@ -335,7 +339,7 @@ export default class EVM {
   /**
    * Executes a precompiled contract with given data and gas limit.
    */
-  runPrecompile(code: PrecompileFunc, data: Buffer, gasLimit: BN): ExecResult {
+  async runPrecompile(code: PrecompileFunc, data: Buffer, gasLimit: BN): Promise<ExecResult> {
     if (typeof code !== 'function') {
       throw new Error('Invalid precompile')
     }
@@ -344,6 +348,7 @@ export default class EVM {
       data,
       gasLimit,
       _common: this._vm._common,
+      _state: this._state,
     }
 
     return code(opts)

@@ -6,7 +6,7 @@ const VM = require('../../../../dist/index').default
 const { getPrecompile } = require('../../../../dist/evm/precompiles')
 
 tape('Precompiles: ECPAIRING', (t) => {
-  t.test('ECPAIRING', (st) => {
+  t.test('ECPAIRING', async (st) => {
     const common = new Common('mainnet', 'petersburg')
     let vm = new VM({ common: common })
     let ECPAIRING = getPrecompile('0000000000000000000000000000000000000008')
@@ -16,7 +16,7 @@ tape('Precompiles: ECPAIRING', (t) => {
       gasLimit: new BN(0xffffff),
       _common: common
     })
-    st.deepEqual(result.gasUsed.toNumber(), 260000, 'should use petersburg gas costs (k ^= 2 pairings)')
+    st.deepEqual((await result).gasUsed.toNumber(), 260000, 'should use petersburg gas costs (k ^= 2 pairings)')
     st.end()
   })
 })

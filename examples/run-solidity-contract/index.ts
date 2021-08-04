@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import { promisify } from 'util'
 import * as util from 'ethereumjs-util'
 import Account from 'ethereumjs-account'
-import { Transaction } from 'ethereumjs-tx'
+import { Transaction } from '@shardlabs/ethereumjs-tx'
 const abi = require('ethereumjs-abi')
 const solc = require('solc')
 

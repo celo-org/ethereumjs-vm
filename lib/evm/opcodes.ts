@@ -175,15 +175,19 @@ const opcodes: OpcodeList = {
 }
 
 const istanbulOpcodes: OpcodeList = {
-  0x31: { name: 'BALANCE', fee: 700, isAsync: true },
-  0x3f: { name: 'EXTCODEHASH', fee: 700, isAsync: true },
   0x46: { name: 'CHAINID', fee: 2, isAsync: false },
   0x47: { name: 'SELFBALANCE', fee: 5, isAsync: false },
-  0x54: { name: 'SLOAD', fee: 800, isAsync: true },
 }
 
-export function getOpcodesForHF(common: Common) {
+function addExperimentalOpcodes() {
+  istanbulOpcodes[0x31] = { name: 'BALANCE', fee: 700, isAsync: true }
+  istanbulOpcodes[0x3f] = { name: 'EXTCODEHASH', fee: 700, isAsync: true }
+  istanbulOpcodes[0x54] = { name: 'SLOAD', fee: 800, isAsync: true }
+}
+
+export function getOpcodesForHF(common: Common, useExperimentalOpcodes: Boolean) {
   if (common.gteHardfork('istanbul')) {
+    useExperimentalOpcodes && addExperimentalOpcodes()
     return { ...opcodes, ...istanbulOpcodes }
   } else {
     return { ...opcodes }

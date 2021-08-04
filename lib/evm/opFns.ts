@@ -933,8 +933,8 @@ function getContractStorage(runState: RunState, address: Buffer, key: Buffer) {
 
 function updateSstoreGas(runState: RunState, found: any, value: Buffer) {
   if (runState._common.hardfork() === 'constantinople') {
-    var original = found.original
-    var current = found.current
+    const original = found.original
+    const current = found.current
     if (current.equals(value)) {
       // If current value equals new value (this is a no-op), 200 gas is deducted.
       runState.eei.useGas(new BN(runState._common.param('gasPrices', 'netSstoreNoopGas')))
