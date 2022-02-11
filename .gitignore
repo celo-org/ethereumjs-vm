@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Vim swap files
 *.swp
 .idea
@@ -109,3 +110,13 @@ Temporary Items
 
 # ethereumjs 
 datadir*
+=======
+node_modules
+package-lock.json
+yarn.lock
+
+# Build folder
+#dist
+
+.vscode
+>>>>>>> master

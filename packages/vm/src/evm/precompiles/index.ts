@@ -19,6 +19,9 @@ import { default as pf } from './0f-bls12-g2multiexp'
 import { default as p10 } from './10-bls12-pairing'
 import { default as p11 } from './11-bls12-map-fp-to-g1'
 import { default as p12 } from './12-bls12-map-fp2-to-g2'
+import { default as pf8 } from './f8-epochsize'
+import { default as pfc } from './fc-fractionmulexp'
+import { default as pfd } from './fd-transfer'
 
 interface Precompiles {
   [key: string]: PrecompileFunc
@@ -67,6 +70,9 @@ const precompiles: Precompiles = {
   '0000000000000000000000000000000000000010': p10,
   '0000000000000000000000000000000000000011': p11,
   '0000000000000000000000000000000000000012': p12,
+  '00000000000000000000000000000000000000f8': pf8,
+  '00000000000000000000000000000000000000fc': pfc,
+  '00000000000000000000000000000000000000fd': pfd,
 }
 
 const precompileAvailability: PrecompileAvailability = {
@@ -141,6 +147,18 @@ const precompileAvailability: PrecompileAvailability = {
   '0000000000000000000000000000000000000012': {
     type: PrecompileAvailabilityCheck.EIP,
     param: 2537,
+  },
+  '00000000000000000000000000000000000000f8': {
+    type: PrecompileAvailabilityCheck.Hardfork,
+    param: 'chainstart',
+  },
+  '00000000000000000000000000000000000000fc': {
+    type: PrecompileAvailabilityCheck.Hardfork,
+    param: 'chainstart',
+  },
+  '00000000000000000000000000000000000000fd': {
+    type: PrecompileAvailabilityCheck.Hardfork,
+    param: 'chainstart',
   },
 }
 
