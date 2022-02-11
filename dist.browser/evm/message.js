@@ -16,9 +16,6 @@ var Message = /** @class */ (function () {
         this.salt = opts.salt; // For CREATE2, TODO: Move from here
         this.selfdestruct = opts.selfdestruct; // TODO: Move from here
         this.delegatecall = opts.delegatecall || false;
-        if (this.value.isNeg()) {
-            throw new Error("value field cannot be negative, received ".concat(this.value));
-        }
     }
     Object.defineProperty(Message.prototype, "codeAddress", {
         get: function () {

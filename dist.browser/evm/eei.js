@@ -96,7 +96,7 @@ var EEI = /** @class */ (function () {
     EEI.prototype.useGas = function (amount, context) {
         this._gasLeft.isub(amount);
         if (this._evm._vm.DEBUG) {
-            debugGas("".concat(context ? context + ': ' : '', "used ").concat(amount, " gas (-> ").concat(this._gasLeft, ")"));
+            debugGas((context ? context + ': ' : '') + "used " + amount + " gas (-> " + this._gasLeft + ")");
         }
         if (this._gasLeft.ltn(0)) {
             this._gasLeft = new ethereumjs_util_1.BN(0);
@@ -110,7 +110,7 @@ var EEI = /** @class */ (function () {
      */
     EEI.prototype.refundGas = function (amount, context) {
         if (this._evm._vm.DEBUG) {
-            debugGas("".concat(context ? context + ': ' : '', "refund ").concat(amount, " gas (-> ").concat(this._evm._refund, ")"));
+            debugGas((context ? context + ': ' : '') + "refund " + amount + " gas (-> " + this._evm._refund + ")");
         }
         this._evm._refund.iadd(amount);
     };
@@ -121,7 +121,7 @@ var EEI = /** @class */ (function () {
      */
     EEI.prototype.subRefund = function (amount, context) {
         if (this._evm._vm.DEBUG) {
-            debugGas("".concat(context ? context + ': ' : '', "sub gas refund ").concat(amount, " (-> ").concat(this._evm._refund, ")"));
+            debugGas((context ? context + ': ' : '') + "sub gas refund " + amount + " (-> " + this._evm._refund + ")");
         }
         this._evm._refund.isub(amount);
         if (this._evm._refund.ltn(0)) {
@@ -135,7 +135,7 @@ var EEI = /** @class */ (function () {
      */
     EEI.prototype.addStipend = function (amount) {
         if (this._evm._vm.DEBUG) {
-            debugGas("add stipend ".concat(amount, " (-> ").concat(this._gasLeft, ")"));
+            debugGas("add stipend " + amount + " (-> " + this._gasLeft + ")");
         }
         this._gasLeft.iadd(amount);
     };
@@ -318,12 +318,6 @@ var EEI = /** @class */ (function () {
      */
     EEI.prototype.getBlockDifficulty = function () {
         return this._env.block.header.difficulty;
-    };
-    /**
-     * Returns the block's random field.
-     */
-    EEI.prototype.getBlockRandom = function () {
-        return new ethereumjs_util_1.BN(this._env.block.header.random);
     };
     /**
      * Returns the block's gas limit.
@@ -639,10 +633,6 @@ var EEI = /** @class */ (function () {
                         // Check if account has enough ether and max depth not exceeded
                         if (this._env.depth >= this._common.param('vm', 'stackLimit') ||
                             (msg.delegatecall !== true && this._env.contract.balance.lt(msg.value))) {
-                            return [2 /*return*/, new ethereumjs_util_1.BN(0)];
-                        }
-                        // EIP-2681 check
-                        if (this._env.contract.nonce.gte(ethereumjs_util_1.MAX_UINT64)) {
                             return [2 /*return*/, new ethereumjs_util_1.BN(0)];
                         }
                         this._env.contract.nonce.iaddn(1);

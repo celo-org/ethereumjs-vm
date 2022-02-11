@@ -115,41 +115,37 @@ var EVM = /** @class */ (function () {
      * if an exception happens during the message execution.
      */
     EVM.prototype.executeMessage = function (message) {
-        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var _b, _c, oldRefund, result, caller, gasLimit, to, value, delegatecall, _d, gasUsed, exceptionError, returnValue, gasRefund, err;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var _a, _b, result, err;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0: return [4 /*yield*/, this._vm._emit('beforeMessage', message)];
                     case 1:
-                        _e.sent();
+                        _c.sent();
                         if (!(!message.to && this._vm._common.isActivatedEIP(2929))) return [3 /*break*/, 3];
                         message.code = message.data;
-                        _c = (_b = this._state).addWarmedAddress;
+                        _b = (_a = this._state).addWarmedAddress;
                         return [4 /*yield*/, this._generateAddress(message)];
                     case 2:
-                        _c.apply(_b, [(_e.sent()).buf]);
-                        _e.label = 3;
-                    case 3:
-                        oldRefund = this._refund.clone();
-                        return [4 /*yield*/, this._state.checkpoint()];
+                        _b.apply(_a, [(_c.sent()).buf]);
+                        _c.label = 3;
+                    case 3: return [4 /*yield*/, this._state.checkpoint()];
                     case 4:
-                        _e.sent();
+                        _c.sent();
                         if (this._vm.DEBUG) {
                             debug('-'.repeat(100));
                             debug("message checkpoint");
                         }
                         if (this._vm.DEBUG) {
-                            caller = message.caller, gasLimit = message.gasLimit, to = message.to, value = message.value, delegatecall = message.delegatecall;
-                            debug("New message caller=".concat(caller, " gasLimit=").concat(gasLimit, " to=").concat((_a = to === null || to === void 0 ? void 0 : to.toString()) !== null && _a !== void 0 ? _a : 'none', " value=").concat(value, " delegatecall=").concat(delegatecall ? 'yes' : 'no'));
+                            debug("New message caller=" + message.caller + " gasLimit=" + message.gasLimit + " to=" + (message.to ? message.to.toString() : '') + " value=" + message.value + " delegatecall=" + (message.delegatecall ? 'yes' : 'no'));
                         }
                         if (!message.to) return [3 /*break*/, 6];
                         if (this._vm.DEBUG) {
-                            debug("Message CALL execution (to: ".concat(message.to, ")"));
+                            debug("Message CALL execution (to: " + message.to + ")");
                         }
                         return [4 /*yield*/, this._executeCall(message)];
                     case 5:
-                        result = _e.sent();
+                        result = _c.sent();
                         return [3 /*break*/, 8];
                     case 6:
                         if (this._vm.DEBUG) {
@@ -157,29 +153,22 @@ var EVM = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this._executeCreate(message)];
                     case 7:
-                        result = _e.sent();
-                        _e.label = 8;
+                        result = _c.sent();
+                        _c.label = 8;
                     case 8:
                         if (this._vm.DEBUG) {
-                            _d = result.execResult, gasUsed = _d.gasUsed, exceptionError = _d.exceptionError, returnValue = _d.returnValue, gasRefund = _d.gasRefund;
-                            debug("Received message execResult: [ gasUsed=".concat(gasUsed, " exceptionError=").concat(exceptionError ? "'".concat(exceptionError.error, "'") : 'none', " returnValue=0x").concat((0, util_1.short)(returnValue), " gasRefund=").concat(gasRefund !== null && gasRefund !== void 0 ? gasRefund : 0, " ]"));
+                            debug("Received message results gasUsed=" + result.gasUsed + " execResult: [ gasUsed=" + result.gasUsed + " exceptionError=" + (result.execResult.exceptionError ? result.execResult.exceptionError.toString() : '') + " returnValue=" + (0, util_1.short)(result.execResult.returnValue) + " gasRefund=" + result.execResult.gasRefund + " ]");
                         }
-                        err = result.execResult.exceptionError;
-                        // This clause captures any error which happened during execution
-                        // If that is the case, then set the _refund tracker to the old refund value
-                        if (err) {
-                            // TODO: Move `gasRefund` to a tx-level result object
-                            // instead of `ExecResult`.
-                            this._refund = oldRefund;
-                            result.execResult.selfdestruct = {};
-                        }
+                        // TODO: Move `gasRefund` to a tx-level result object
+                        // instead of `ExecResult`.
                         result.execResult.gasRefund = this._refund.clone();
+                        err = result.execResult.exceptionError;
                         if (!err) return [3 /*break*/, 13];
                         if (!(this._vm._common.gteHardfork('homestead') || err.error != exceptions_1.ERROR.CODESTORE_OUT_OF_GAS)) return [3 /*break*/, 10];
                         result.execResult.logs = [];
                         return [4 /*yield*/, this._state.revert()];
                     case 9:
-                        _e.sent();
+                        _c.sent();
                         if (this._vm.DEBUG) {
                             debug("message checkpoint reverted");
                         }
@@ -191,22 +180,22 @@ var EVM = /** @class */ (function () {
                     case 11:
                         // we are in chainstart and the error was the code deposit error
                         // we do like nothing happened.
-                        _e.sent();
+                        _c.sent();
                         if (this._vm.DEBUG) {
                             debug("message checkpoint committed");
                         }
-                        _e.label = 12;
+                        _c.label = 12;
                     case 12: return [3 /*break*/, 15];
                     case 13: return [4 /*yield*/, this._state.commit()];
                     case 14:
-                        _e.sent();
+                        _c.sent();
                         if (this._vm.DEBUG) {
                             debug("message checkpoint committed");
                         }
-                        _e.label = 15;
+                        _c.label = 15;
                     case 15: return [4 /*yield*/, this._vm._emit('afterMessage', result)];
                     case 16:
-                        _e.sent();
+                        _c.sent();
                         return [2 /*return*/, result];
                 }
             });
@@ -260,7 +249,7 @@ var EVM = /** @class */ (function () {
                         if (errorMessage) {
                             exit = true;
                             if (this._vm.DEBUG) {
-                                debug("Exit early on value transfer overflowed");
+                                debug("Exit early on value tranfer overflowed");
                             }
                         }
                         if (exit) {
@@ -319,7 +308,7 @@ var EVM = /** @class */ (function () {
                     case 3:
                         _a.to = _b.sent();
                         if (this._vm.DEBUG) {
-                            debug("Generated CREATE contract address ".concat(message.to));
+                            debug("Generated CREATE contract address " + message.to);
                         }
                         return [4 /*yield*/, this._state.getAccount(message.to)
                             // Check for collision
@@ -382,7 +371,7 @@ var EVM = /** @class */ (function () {
                         if (errorMessage) {
                             exit = true;
                             if (this._vm.DEBUG) {
-                                debug("Exit early on value transfer overflowed");
+                                debug("Exit early on value tranfer overflowed");
                             }
                         }
                         if (exit) {
@@ -410,12 +399,11 @@ var EVM = /** @class */ (function () {
                             returnFee = new ethereumjs_util_1.BN(result.returnValue.length).imuln(this._vm._common.param('gasPrices', 'createData'));
                             totalGas = totalGas.add(returnFee);
                             if (this._vm.DEBUG) {
-                                debugGas("Add return value size fee (".concat(returnFee, " to gas used (-> ").concat(totalGas, "))"));
+                                debugGas("Add return value size fee (" + returnFee + " to gas used (-> " + totalGas + "))");
                             }
                         }
                         allowedCodeSize = true;
-                        if (!result.exceptionError &&
-                            this._vm._common.gteHardfork('spuriousDragon') &&
+                        if (this._vm._common.gteHardfork('spuriousDragon') &&
                             result.returnValue.length > this._vm._common.param('vm', 'maxCodeSize')) {
                             allowedCodeSize = false;
                         }
@@ -486,7 +474,7 @@ var EVM = /** @class */ (function () {
     EVM.prototype.runInterpreter = function (message, opts) {
         if (opts === void 0) { opts = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var env, eei, interpreter, interpreterRes, result, gasUsed;
+            var env, eei, oldRefund, interpreter, interpreterRes, result, gasUsed;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -513,6 +501,7 @@ var EVM = /** @class */ (function () {
                         if (message.selfdestruct) {
                             eei._result.selfdestruct = message.selfdestruct;
                         }
+                        oldRefund = this._refund.clone();
                         interpreter = new interpreter_1.default(this._vm, eei);
                         return [4 /*yield*/, interpreter.run(message.code, opts)];
                     case 2:
@@ -525,6 +514,8 @@ var EVM = /** @class */ (function () {
                             }
                             // Clear the result on error
                             result = __assign(__assign({}, result), { logs: [], selfdestruct: {} });
+                            // Revert gas refund if message failed
+                            this._refund = oldRefund;
                         }
                         return [2 /*return*/, __assign(__assign({}, result), { runState: __assign(__assign(__assign({}, interpreterRes.runState), result), eei._env), exceptionError: interpreterRes.exceptionError, gas: eei._gasLeft, gasUsed: gasUsed, returnValue: result.returnValue ? result.returnValue : Buffer.alloc(0) })];
                 }
@@ -604,7 +595,7 @@ var EVM = /** @class */ (function () {
                 account.balance.isub(message.value);
                 result = this._state.putAccount(message.caller, account);
                 if (this._vm.DEBUG) {
-                    debug("Reduced sender (".concat(message.caller, ") balance (-> ").concat(account.balance, ")"));
+                    debug("Reduced sender (" + message.caller + ") balance (-> " + account.balance + ")");
                 }
                 return [2 /*return*/, result];
             });
@@ -621,7 +612,7 @@ var EVM = /** @class */ (function () {
                 toAccount.balance = newBalance;
                 result = this._state.putAccount(message.to, toAccount);
                 if (this._vm.DEBUG) {
-                    debug("Added toAccount (".concat(message.to, ") balance (-> ").concat(toAccount.balance, ")"));
+                    debug("Added toAccount (" + message.to + ") balance (-> " + toAccount.balance + ")");
                 }
                 return [2 /*return*/, result];
             });

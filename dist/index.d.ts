@@ -37,7 +37,6 @@ export interface VMOpts {
      * - [EIP-3198](https://eips.ethereum.org/EIPS/eip-3198) - BASEFEE opcode
      * - [EIP-3529](https://eips.ethereum.org/EIPS/eip-3529) - Reduction in refunds
      * - [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) - Reject new contracts starting with the 0xEF byte
-     * - [EIP-3855](https://eips.ethereum.org/EIPS/eip-3855) - PUSH0 instruction
      *
      * *Annotations:*
      *

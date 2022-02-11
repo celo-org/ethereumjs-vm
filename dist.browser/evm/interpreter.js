@@ -45,7 +45,6 @@ var exceptions_1 = require("../exceptions");
 var memory_1 = __importDefault(require("./memory"));
 var stack_1 = __importDefault(require("./stack"));
 var opcodes_1 = require("./opcodes");
-var gas_1 = require("./opcodes/gas");
 /**
  * Parses and executes EVM bytecode.
  */
@@ -65,45 +64,45 @@ var Interpreter = /** @class */ (function () {
             stack: new stack_1.default(),
             returnStack: new stack_1.default(1023),
             code: Buffer.alloc(0),
-            validJumps: Uint8Array.from([]),
+            validJumps: [],
+            validJumpSubs: [],
             stateManager: this._state,
             eei: this._eei,
-            shouldDoJumpAnalysis: true,
         };
     }
     Interpreter.prototype.run = function (code, opts) {
         var _a;
         if (opts === void 0) { opts = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var pc, err, opCode, e_1;
+            var valid, pc, err, opCode, e_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         this._runState.code = code;
                         this._runState.programCounter = (_a = opts.pc) !== null && _a !== void 0 ? _a : this._runState.programCounter;
+                        valid = this._getValidJumpDests(code);
+                        this._runState.validJumps = valid.jumps;
+                        this._runState.validJumpSubs = valid.jumpSubs;
                         pc = this._runState.programCounter;
                         if (pc !== 0 && (pc < 0 || pc >= this._runState.code.length)) {
                             throw new Error('Internal error: program counter not in range');
                         }
                         _b.label = 1;
                     case 1:
-                        if (!(this._runState.programCounter < this._runState.code.length)) return [3 /*break*/, 6];
+                        if (!(this._runState.programCounter < this._runState.code.length)) return [3 /*break*/, 7];
                         opCode = this._runState.code[this._runState.programCounter];
-                        if (this._runState.shouldDoJumpAnalysis &&
-                            (opCode === 0x56 || opCode === 0x57 || opCode === 0x5e)) {
-                            // Only run the jump destination analysis if `code` actually contains a JUMP/JUMPI/JUMPSUB opcode
-                            this._runState.validJumps = this._getValidJumpDests(code);
-                            this._runState.shouldDoJumpAnalysis = false;
-                        }
                         this._runState.opCode = opCode;
-                        _b.label = 2;
+                        return [4 /*yield*/, this._runStepHook()];
                     case 2:
-                        _b.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, this.runStep()];
-                    case 3:
                         _b.sent();
-                        return [3 /*break*/, 5];
+                        _b.label = 3;
+                    case 3:
+                        _b.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, this.runStep()];
                     case 4:
+                        _b.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
                         e_1 = _b.sent();
                         // re-throw on non-VM errors
                         if (!('errorType' in e_1 && e_1.errorType === 'VmError')) {
@@ -113,9 +112,9 @@ var Interpreter = /** @class */ (function () {
                         if (e_1.error !== exceptions_1.ERROR.STOP) {
                             err = e_1;
                         }
-                        return [3 /*break*/, 6];
-                    case 5: return [3 /*break*/, 1];
-                    case 6: return [2 /*return*/, {
+                        return [3 /*break*/, 7];
+                    case 6: return [3 /*break*/, 1];
+                    case 7: return [2 /*return*/, {
                             runState: this._runState,
                             exceptionError: err,
                         }];
@@ -129,52 +128,29 @@ var Interpreter = /** @class */ (function () {
      */
     Interpreter.prototype.runStep = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var opInfo, gas, gasLimitClone, dynamicGasHandler, opFn;
+            var opInfo, opFn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         opInfo = this.lookupOpInfo(this._runState.opCode);
-                        gas = new ethereumjs_util_1.BN(opInfo.fee);
-                        gasLimitClone = this._eei.getGasLeft();
-                        if (!opInfo.dynamicGas) return [3 /*break*/, 2];
-                        dynamicGasHandler = gas_1.dynamicGasHandlers.get(this._runState.opCode);
-                        // This function updates the gas BN in-place using `i*` methods
-                        // It needs the base fee, for correct gas limit calculation for the CALL opcodes
-                        return [4 /*yield*/, dynamicGasHandler(this._runState, gas, this._vm._common)];
-                    case 1:
-                        // This function updates the gas BN in-place using `i*` methods
-                        // It needs the base fee, for correct gas limit calculation for the CALL opcodes
-                        _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        if (!(this._vm.listenerCount('step') > 0 || this._vm.DEBUG)) return [3 /*break*/, 4];
-                        // Only run this stepHook function if there is an event listener (e.g. test runner)
-                        // or if the vm is running in debug mode (to display opcode debug logs)
-                        return [4 /*yield*/, this._runStepHook(gas, gasLimitClone)];
-                    case 3:
-                        // Only run this stepHook function if there is an event listener (e.g. test runner)
-                        // or if the vm is running in debug mode (to display opcode debug logs)
-                        _a.sent();
-                        _a.label = 4;
-                    case 4:
                         // Check for invalid opcode
                         if (opInfo.name === 'INVALID') {
                             throw new exceptions_1.VmError(exceptions_1.ERROR.INVALID_OPCODE);
                         }
                         // Reduce opcode's base fee
-                        this._eei.useGas(gas, "".concat(opInfo.name, " fee"));
+                        this._eei.useGas(new ethereumjs_util_1.BN(opInfo.fee), opInfo.name + " (base fee)");
                         // Advance program counter
                         this._runState.programCounter++;
                         opFn = this.getOpHandler(opInfo);
-                        if (!opInfo.isAsync) return [3 /*break*/, 6];
+                        if (!opInfo.isAsync) return [3 /*break*/, 2];
                         return [4 /*yield*/, opFn.apply(null, [this._runState, this._vm._common])];
-                    case 5:
+                    case 1:
                         _a.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
+                        return [3 /*break*/, 3];
+                    case 2:
                         opFn.apply(null, [this._runState, this._vm._common]);
-                        _a.label = 7;
-                    case 7: return [2 /*return*/];
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -193,19 +169,18 @@ var Interpreter = /** @class */ (function () {
         // if not found, return 0xfe: INVALID
         return (_a = this._vm._opcodes.get(op)) !== null && _a !== void 0 ? _a : this._vm._opcodes.get(0xfe);
     };
-    Interpreter.prototype._runStepHook = function (dynamicFee, gasLeft) {
+    Interpreter.prototype._runStepHook = function () {
         return __awaiter(this, void 0, void 0, function () {
             var opcode, eventObj, hexStack, name_1, opTrace;
             return __generator(this, function (_a) {
                 opcode = this.lookupOpInfo(this._runState.opCode);
                 eventObj = {
                     pc: this._runState.programCounter,
-                    gasLeft: gasLeft,
+                    gasLeft: this._eei.getGasLeft(),
                     gasRefund: this._eei._evm._refund,
                     opcode: {
                         name: opcode.fullName,
                         fee: opcode.fee,
-                        dynamicFee: dynamicFee,
                         isAsync: opcode.isAsync,
                     },
                     stack: this._runState.stack._store,
@@ -233,7 +208,7 @@ var Interpreter = /** @class */ (function () {
                         depth: eventObj.depth,
                     };
                     if (!(name_1 in this.opDebuggers)) {
-                        this.opDebuggers[name_1] = (0, debug_1.debug)("vm:ops:".concat(name_1));
+                        this.opDebuggers[name_1] = (0, debug_1.debug)("vm:ops:" + name_1);
                     }
                     this.opDebuggers[name_1](JSON.stringify(opTrace));
                 }
@@ -243,21 +218,15 @@ var Interpreter = /** @class */ (function () {
                  * @event Event: step
                  * @type {Object}
                  * @property {Number} pc representing the program counter
-                 * @property {Object} opcode the next opcode to be ran
-                 * @property {string}     opcode.name
-                 * @property {fee}        opcode.number Base fee of the opcode
-                 * @property {dynamicFee} opcode.dynamicFee Dynamic opcode fee
-                 * @property {boolean}    opcode.isAsync opcode is async
+                 * @property {String} opcode the next opcode to be ran
                  * @property {BN} gasLeft amount of gasLeft
-                 * @property {BN} gasRefund gas refund
-                 * @property {StateManager} stateManager a {@link StateManager} instance
                  * @property {Array} stack an `Array` of `Buffers` containing the stack
-                 * @property {Array} returnStack the return stack
                  * @property {Account} account the Account which owns the code running
                  * @property {Address} address the address of the `account`
                  * @property {Number} depth the current number of calls deep the contract is
                  * @property {Buffer} memory the memory of the VM as a `buffer`
                  * @property {BN} memoryWordCount current size of memory in words
+                 * @property {StateManager} stateManager a {@link StateManager} instance
                  * @property {Address} codeAddress the address of the code which is currently being ran (this differs from `address` in a `DELEGATECALL` and `CALLCODE` call)
                  */
                 return [2 /*return*/, this._vm._emit('step', eventObj)];
@@ -266,25 +235,22 @@ var Interpreter = /** @class */ (function () {
     };
     // Returns all valid jump and jumpsub destinations.
     Interpreter.prototype._getValidJumpDests = function (code) {
-        var jumps = new Uint8Array(code.length).fill(0);
+        var jumps = [];
+        var jumpSubs = [];
         for (var i = 0; i < code.length; i++) {
-            var opcode = code[i];
-            // skip over PUSH0-32 since no jump destinations in the middle of a push block
-            if (opcode <= 0x7f) {
-                if (opcode >= 0x60) {
-                    i += opcode - 0x5f;
-                }
-                else if (opcode === 0x5b) {
-                    // Define a JUMPDEST as a 1 in the valid jumps array
-                    jumps[i] = 1;
-                }
-                else if (opcode === 0x5c) {
-                    // Define a BEGINSUB as a 2 in the valid jumps array
-                    jumps[i] = 2;
-                }
+            var curOpCode = this.lookupOpInfo(code[i]).name;
+            // no destinations into the middle of PUSH
+            if (curOpCode === 'PUSH') {
+                i += code[i] - 0x5f;
+            }
+            if (curOpCode === 'JUMPDEST') {
+                jumps.push(i);
+            }
+            if (curOpCode === 'BEGINSUB') {
+                jumpSubs.push(i);
             }
         }
-        return jumps;
+        return { jumps: jumps, jumpSubs: jumpSubs };
     };
     return Interpreter;
 }());

@@ -249,12 +249,6 @@ class EEI {
         return this._env.block.header.difficulty;
     }
     /**
-     * Returns the block's random field.
-     */
-    getBlockRandom() {
-        return new ethereumjs_util_1.BN(this._env.block.header.random);
-    }
-    /**
      * Returns the block's gas limit.
      */
     getBlockGasLimit() {
@@ -483,10 +477,6 @@ class EEI {
         // Check if account has enough ether and max depth not exceeded
         if (this._env.depth >= this._common.param('vm', 'stackLimit') ||
             (msg.delegatecall !== true && this._env.contract.balance.lt(msg.value))) {
-            return new ethereumjs_util_1.BN(0);
-        }
-        // EIP-2681 check
-        if (this._env.contract.nonce.gte(ethereumjs_util_1.MAX_UINT64)) {
             return new ethereumjs_util_1.BN(0);
         }
         this._env.contract.nonce.iaddn(1);

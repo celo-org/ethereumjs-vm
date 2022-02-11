@@ -16,23 +16,22 @@ function accessAddressEIP2929(runState, address, common, chargeGas, isSelfdestru
     if (chargeGas === void 0) { chargeGas = true; }
     if (isSelfdestruct === void 0) { isSelfdestruct = false; }
     if (!common.isActivatedEIP(2929))
-        return new ethereumjs_util_1.BN(0);
-    var stateManager = runState.stateManager;
+        return;
     var addressStr = address.buf;
     // Cold
-    if (!stateManager.isWarmedAddress(addressStr)) {
-        stateManager.addWarmedAddress(addressStr);
+    if (!runState.stateManager.isWarmedAddress(addressStr)) {
+        // eslint-disable-next-line prettier/prettier
+        runState.stateManager.addWarmedAddress(addressStr);
         // CREATE, CREATE2 opcodes have the address warmed for free.
         // selfdestruct beneficiary address reads are charged an *additional* cold access
         if (chargeGas) {
-            return new ethereumjs_util_1.BN(common.param('gasPrices', 'coldaccountaccess'));
+            runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'coldaccountaccess')), 'EIP-2929 -> coldaccountaccess');
         }
         // Warm: (selfdestruct beneficiary address reads are not charged when warm)
     }
     else if (chargeGas && !isSelfdestruct) {
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'warmstorageread'));
+        runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'warmstorageread')), 'EIP-2929 -> warmstorageread');
     }
-    return new ethereumjs_util_1.BN(0);
 }
 exports.accessAddressEIP2929 = accessAddressEIP2929;
 /**
@@ -45,19 +44,18 @@ exports.accessAddressEIP2929 = accessAddressEIP2929;
  */
 function accessStorageEIP2929(runState, key, isSstore, common) {
     if (!common.isActivatedEIP(2929))
-        return new ethereumjs_util_1.BN(0);
-    var stateManager = runState.stateManager;
+        return;
     var address = runState.eei.getAddress().buf;
-    var slotIsCold = !stateManager.isWarmedStorage(address, key);
+    var slotIsCold = !runState.stateManager.isWarmedStorage(address, key);
     // Cold (SLOAD and SSTORE)
     if (slotIsCold) {
-        stateManager.addWarmedStorage(address, key);
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'coldsload'));
+        // eslint-disable-next-line prettier/prettier
+        runState.stateManager.addWarmedStorage(address, key);
+        runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'coldsload')), 'EIP-2929 -> coldsload');
     }
     else if (!isSstore) {
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'warmstorageread'));
+        runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'warmstorageread')), 'EIP-2929 -> warmstorageread');
     }
-    return new ethereumjs_util_1.BN(0);
 }
 exports.accessStorageEIP2929 = accessStorageEIP2929;
 /**
@@ -65,26 +63,27 @@ exports.accessStorageEIP2929 = accessStorageEIP2929;
  * location is already warm
  * @param  {RunState} runState
  * @param  {Buffer}   key          storage slot
- * @param  {BN}       defaultCost  SSTORE_RESET_GAS / SLOAD
- * @param  {string}   costName     parameter name ('noop')
+ * @param  {number}   defaultCost  SSTORE_RESET_GAS / SLOAD
+ * @param  {string}   costName     parameter name ('reset' or 'noop')
  * @param  {Common}   common
- * @return {BN}                    adjusted cost
+ * @return {number}                adjusted cost
  */
 function adjustSstoreGasEIP2929(runState, key, defaultCost, costName, common) {
     if (!common.isActivatedEIP(2929))
         return defaultCost;
-    var stateManager = runState.stateManager;
     var address = runState.eei.getAddress().buf;
-    var warmRead = new ethereumjs_util_1.BN(common.param('gasPrices', 'warmstorageread'));
-    var coldSload = new ethereumjs_util_1.BN(common.param('gasPrices', 'coldsload'));
-    if (stateManager.isWarmedStorage(address, key)) {
+    var warmRead = common.param('gasPrices', 'warmstorageread');
+    var coldSload = common.param('gasPrices', 'coldsload');
+    if (runState.stateManager.isWarmedStorage(address, key)) {
         switch (costName) {
+            case 'reset':
+                return defaultCost - coldSload;
             case 'noop':
                 return warmRead;
             case 'initRefund':
-                return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreInitGasEIP2200')).sub(warmRead);
+                return common.param('gasPrices', 'sstoreInitGasEIP2200') - warmRead;
             case 'cleanRefund':
-                return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreReset')).sub(coldSload).sub(warmRead);
+                return common.param('gasPrices', 'sstoreReset') - coldSload - warmRead;
         }
     }
     return defaultCost;

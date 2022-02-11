@@ -1,23 +1,12 @@
-/// <reference types="node" />
 import { Account, Address } from 'ethereumjs-util';
-export declare type getCb = (address: Address) => Promise<Account | undefined>;
-export declare type putCb = (keyBuf: Buffer, accountRlp: Buffer) => Promise<void>;
-export declare type deleteCb = (keyBuf: Buffer) => Promise<void>;
-export interface CacheOpts {
-    getCb: getCb;
-    putCb: putCb;
-    deleteCb: deleteCb;
-}
 /**
  * @ignore
  */
 export default class Cache {
     _cache: any;
     _checkpoints: any[];
-    _getCb: getCb;
-    _putCb: putCb;
-    _deleteCb: deleteCb;
-    constructor(opts: CacheOpts);
+    _trie: any;
+    constructor(trie: any);
     /**
      * Puts account to cache under its address.
      * @param key - Address of account
@@ -40,11 +29,22 @@ export default class Cache {
      */
     keyIsDeleted(key: Address): boolean;
     /**
+     * Looks up address in underlying trie.
+     * @param address - Address of account
+     */
+    _lookupAccount(address: Address): Promise<Account | undefined>;
+    /**
      * Looks up address in cache, if not found, looks it up
      * in the underlying trie.
      * @param key - Address of account
      */
     getOrLoad(address: Address): Promise<Account>;
+    /**
+     * Warms cache by loading their respective account from trie
+     * and putting them in cache.
+     * @param addresses - Array of addresses
+     */
+    warm(addresses: string[]): Promise<void>;
     /**
      * Flushes cache by updating accounts that have been modified
      * and removing accounts that have been deleted.

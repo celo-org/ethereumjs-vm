@@ -141,13 +141,13 @@ var VM = /** @class */ (function (_super) {
             throw new Error('Chain/hardfork options are not allowed any more on initialization');
         }
         if (opts.common) {
-            // Supported EIPs
-            var supportedEIPs = [1559, 2315, 2537, 2565, 2718, 2929, 2930, 3198, 3529, 3541, 3607, 3855];
+            //EIPs
+            var supportedEIPs = [1559, 2315, 2537, 2565, 2718, 2929, 2930, 3198, 3529, 3541];
             try {
                 for (var _f = __values(opts.common.eips()), _g = _f.next(); !_g.done; _g = _f.next()) {
                     var eip = _g.value;
                     if (!supportedEIPs.includes(eip)) {
-                        throw new Error("EIP-".concat(eip, " is not supported by the VM"));
+                        throw new Error(eip + " is not supported by the VM");
                     }
                 }
             }
@@ -458,7 +458,7 @@ var VM = /** @class */ (function (_super) {
         catch (e) {
             hf = 'error';
         }
-        var errorStr = "vm hf=".concat(hf);
+        var errorStr = "vm hf=" + hf;
         return errorStr;
     };
     return VM;

@@ -182,12 +182,12 @@ function runTx(opts) {
 }
 exports.default = runTx;
 function _runTx(opts) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var state, tx, block, caller, txBaseFee, gasLimit, msg, maxFeePerGas, baseFeePerGas, msg, fromAccount, nonce, balance, msg, cost, msg, cost_1, msg, msg, gasPrice, inclusionFeePerGas, baseFee, baseFee, txCost, txContext, value, data, to, message, evm, results, _e, gasUsed, exceptionError, returnValue, gasRefund_1, gasRefund, maxRefundQuotient, maxRefund, actualTxCost, txCostDiff, miner, minerAccount, keys, keys_1, keys_1_1, k, address, e_2_1, cumulativeGasUsed, _f, event;
-        var e_2, _g;
-        return __generator(this, function (_h) {
-            switch (_h.label) {
+        var state, tx, block, caller, txBaseFee, gasLimit, msg, maxFeePerGas, baseFeePerGas, msg, fromAccount, nonce, balance, cost, msg, cost_1, msg, msg, gasPrice, inclusionFeePerGas, baseFee, baseFee, txCost, txContext, value, data, to, message, evm, results, gasRefund, maxRefundQuotient, maxRefund, actualTxCost, txCostDiff, miner, minerAccount, keys, keys_1, keys_1_1, k, address, e_2_1, cumulativeGasUsed, _d, event;
+        var e_2, _e;
+        return __generator(this, function (_f) {
+            switch (_f.label) {
                 case 0:
                     state = this.stateManager;
                     tx = opts.tx, block = opts.block;
@@ -210,10 +210,10 @@ function _runTx(opts) {
                      * @type {Object}
                      * @property {Transaction} tx emits the Transaction that is about to be processed
                      */
-                    _h.sent();
+                    _f.sent();
                     caller = tx.getSenderAddress();
                     if (this.DEBUG) {
-                        debug("New tx run hash=".concat(opts.tx.isSigned() ? opts.tx.hash().toString('hex') : 'unsigned', " sender=").concat(caller));
+                        debug("New tx run hash=" + (opts.tx.isSigned() ? opts.tx.hash().toString('hex') : 'unsigned') + " sender=" + caller);
                     }
                     if (this._common.isActivatedEIP(2929)) {
                         // Add origin and precompiles to warm addresses
@@ -234,42 +234,37 @@ function _runTx(opts) {
                     }
                     gasLimit.isub(txBaseFee);
                     if (this.DEBUG) {
-                        debugGas("Subtracting base fee (".concat(txBaseFee, ") from gasLimit (-> ").concat(gasLimit, ")"));
+                        debugGas("Subtracting base fee (" + txBaseFee + ") from gasLimit (-> " + gasLimit + ")");
                     }
                     if (this._common.isActivatedEIP(1559)) {
                         maxFeePerGas = 'maxFeePerGas' in tx ? tx.maxFeePerGas : tx.gasPrice;
                         baseFeePerGas = block.header.baseFeePerGas;
                         if (maxFeePerGas.lt(baseFeePerGas)) {
-                            msg = _errorMsg("Transaction's maxFeePerGas (".concat(maxFeePerGas, ") is less than the block's baseFeePerGas (").concat(baseFeePerGas, ")"), this, block, tx);
+                            msg = _errorMsg("Transaction's maxFeePerGas (" + maxFeePerGas + ") is less than the block's baseFeePerGas (" + baseFeePerGas + ")", this, block, tx);
                             throw new Error(msg);
                         }
                     }
                     return [4 /*yield*/, state.getAccount(caller)];
                 case 2:
-                    fromAccount = _h.sent();
+                    fromAccount = _f.sent();
                     nonce = fromAccount.nonce, balance = fromAccount.balance;
-                    // EIP-3607: Reject transactions from senders with deployed code
-                    if (this._common.isActivatedEIP(3607) && !fromAccount.codeHash.equals(ethereumjs_util_1.KECCAK256_NULL)) {
-                        msg = _errorMsg('invalid sender address, address is not EOA (EIP-3607)', this, block, tx);
-                        throw new Error(msg);
-                    }
                     if (!opts.skipBalance) {
                         cost = tx.getUpfrontCost(block.header.baseFeePerGas);
                         if (balance.lt(cost)) {
-                            msg = _errorMsg("sender doesn't have enough funds to send tx. The upfront cost is: ".concat(cost, " and the sender's account (").concat(caller, ") only has: ").concat(balance), this, block, tx);
+                            msg = _errorMsg("sender doesn't have enough funds to send tx. The upfront cost is: " + cost + " and the sender's account (" + caller + ") only has: " + balance, this, block, tx);
                             throw new Error(msg);
                         }
                         if (tx.supports(tx_1.Capability.EIP1559FeeMarket)) {
                             cost_1 = tx.gasLimit.mul(tx.maxFeePerGas).add(tx.value);
                             if (balance.lt(cost_1)) {
-                                msg = _errorMsg("sender doesn't have enough funds to send tx. The max cost is: ".concat(cost_1, " and the sender's account (").concat(caller, ") only has: ").concat(balance), this, block, tx);
+                                msg = _errorMsg("sender doesn't have enough funds to send tx. The max cost is: " + cost_1 + " and the sender's account (" + caller + ") only has: " + balance, this, block, tx);
                                 throw new Error(msg);
                             }
                         }
                     }
                     if (!opts.skipNonce) {
                         if (!nonce.eq(tx.nonce)) {
-                            msg = _errorMsg("the tx doesn't have the correct nonce. account has nonce of: ".concat(nonce, " tx has nonce of: ").concat(tx.nonce), this, block, tx);
+                            msg = _errorMsg("the tx doesn't have the correct nonce. account has nonce of: " + nonce + " tx has nonce of: " + tx.nonce, this, block, tx);
                             throw new Error(msg);
                         }
                     }
@@ -293,9 +288,9 @@ function _runTx(opts) {
                     fromAccount.balance.isub(txCost);
                     return [4 /*yield*/, state.putAccount(caller, fromAccount)];
                 case 3:
-                    _h.sent();
+                    _f.sent();
                     if (this.DEBUG) {
-                        debug("Update fromAccount (caller) nonce (-> ".concat(fromAccount.nonce, ") and balance(-> ").concat(fromAccount.balance, ")"));
+                        debug("Update fromAccount (caller) nonce (-> " + fromAccount.nonce + ") and balance(-> " + fromAccount.balance + ")");
                     }
                     txContext = new txContext_1.default(gasPrice, caller);
                     value = tx.value, data = tx.data, to = tx.to;
@@ -308,15 +303,14 @@ function _runTx(opts) {
                     });
                     evm = new evm_1.default(this, txContext, block);
                     if (this.DEBUG) {
-                        debug("Running tx=0x".concat(tx.isSigned() ? tx.hash().toString('hex') : 'unsigned', " with caller=").concat(caller, " gasLimit=").concat(gasLimit, " to=").concat((_a = to === null || to === void 0 ? void 0 : to.toString()) !== null && _a !== void 0 ? _a : 'none', " value=").concat(value, " data=0x").concat((0, util_1.short)(data)));
+                        debug("Running tx=0x" + (tx.isSigned() ? tx.hash().toString('hex') : 'unsigned') + " with caller=" + caller + " gasLimit=" + gasLimit + " to=" + (to ? to.toString() : '') + " value=" + value + " data=0x" + (0, util_1.short)(data));
                     }
                     return [4 /*yield*/, evm.executeMessage(message)];
                 case 4:
-                    results = (_h.sent());
+                    results = (_f.sent());
                     if (this.DEBUG) {
-                        _e = results.execResult, gasUsed = _e.gasUsed, exceptionError = _e.exceptionError, returnValue = _e.returnValue, gasRefund_1 = _e.gasRefund;
                         debug('-'.repeat(100));
-                        debug("Received tx execResult: [ gasUsed=".concat(gasUsed, " exceptionError=").concat(exceptionError ? "'".concat(exceptionError.error, "'") : 'none', " returnValue=0x").concat((0, util_1.short)(returnValue), " gasRefund=").concat(gasRefund_1 !== null && gasRefund_1 !== void 0 ? gasRefund_1 : 0, " ]"));
+                        debug("Received tx results gasUsed=" + results.gasUsed + " execResult: [ gasUsed=" + results.gasUsed + " exceptionError=" + (results.execResult.exceptionError ? results.execResult.exceptionError.error : '') + " returnValue=" + (0, util_1.short)(results.execResult.returnValue) + " gasRefund=" + results.execResult.gasRefund + " ]");
                     }
                     /*
                      * Parse results
@@ -324,21 +318,21 @@ function _runTx(opts) {
                     // Generate the bloom for the tx
                     results.bloom = txLogsBloom(results.execResult.logs);
                     if (this.DEBUG) {
-                        debug("Generated tx bloom with logs=".concat((_b = results.execResult.logs) === null || _b === void 0 ? void 0 : _b.length));
+                        debug("Generated tx bloom with logs=" + ((_a = results.execResult.logs) === null || _a === void 0 ? void 0 : _a.length));
                     }
-                    // Calculate the total gas used
+                    // Caculate the total gas used
                     results.gasUsed.iadd(txBaseFee);
                     if (this.DEBUG) {
-                        debugGas("tx add baseFee ".concat(txBaseFee, " to gasUsed (-> ").concat(results.gasUsed, ")"));
+                        debugGas("tx add baseFee " + txBaseFee + " to gasUsed (-> " + results.gasUsed + ")");
                     }
-                    gasRefund = (_c = results.execResult.gasRefund) !== null && _c !== void 0 ? _c : new ethereumjs_util_1.BN(0);
+                    gasRefund = (_b = results.execResult.gasRefund) !== null && _b !== void 0 ? _b : new ethereumjs_util_1.BN(0);
                     maxRefundQuotient = this._common.param('gasConfig', 'maxRefundQuotient');
                     if (!gasRefund.isZero()) {
                         maxRefund = results.gasUsed.divn(maxRefundQuotient);
                         gasRefund = ethereumjs_util_1.BN.min(gasRefund, maxRefund);
                         results.gasUsed.isub(gasRefund);
                         if (this.DEBUG) {
-                            debug("Subtract tx gasRefund (".concat(gasRefund, ") from gasUsed (-> ").concat(results.gasUsed, ")"));
+                            debug("Subtract tx gasRefund (" + gasRefund + ") from gasUsed (-> " + results.gasUsed + ")");
                         }
                     }
                     else {
@@ -350,18 +344,18 @@ function _runTx(opts) {
                     return [4 /*yield*/, state.getAccount(caller)];
                 case 5:
                     // Update sender's balance
-                    fromAccount = _h.sent();
+                    fromAccount = _f.sent();
                     actualTxCost = results.gasUsed.mul(gasPrice);
                     txCostDiff = txCost.sub(actualTxCost);
                     fromAccount.balance.iadd(txCostDiff);
                     return [4 /*yield*/, state.putAccount(caller, fromAccount)];
                 case 6:
-                    _h.sent();
+                    _f.sent();
                     if (this.DEBUG) {
-                        debug("Refunded txCostDiff (".concat(txCostDiff, ") to fromAccount (caller) balance (-> ").concat(fromAccount.balance, ")"));
+                        debug("Refunded txCostDiff (" + txCostDiff + ") to fromAccount (caller) balance (-> " + fromAccount.balance + ")");
                     }
                     if (this._common.consensusType() === common_1.ConsensusType.ProofOfAuthority) {
-                        // Backwards-compatibility check
+                        // Backwards-compatibilty check
                         // TODO: can be removed along VM v6 release
                         if ('cliqueSigner' in block.header) {
                             miner = block.header.cliqueSigner();
@@ -377,7 +371,7 @@ function _runTx(opts) {
                         // add the amount spent on gas to the miner's account
                     ];
                 case 7:
-                    minerAccount = _h.sent();
+                    minerAccount = _f.sent();
                     // add the amount spent on gas to the miner's account
                     if (this._common.isActivatedEIP(1559)) {
                         minerAccount.balance.iadd(results.gasUsed.mul(inclusionFeePerGas));
@@ -393,48 +387,48 @@ function _runTx(opts) {
                     // Put the miner account into the state. If the balance of the miner account remains zero, note that
                     // the state.putAccount function puts this into the "touched" accounts. This will thus be removed when
                     // we clean the touched accounts below in case we are in a fork >= SpuriousDragon
-                    _h.sent();
+                    _f.sent();
                     if (this.DEBUG) {
-                        debug("tx update miner account (".concat(miner, ") balance (-> ").concat(minerAccount.balance, ")"));
+                        debug("tx update miner account (" + miner + ") balance (-> " + minerAccount.balance + ")");
                     }
                     if (!results.execResult.selfdestruct) return [3 /*break*/, 16];
                     keys = Object.keys(results.execResult.selfdestruct);
-                    _h.label = 9;
+                    _f.label = 9;
                 case 9:
-                    _h.trys.push([9, 14, 15, 16]);
+                    _f.trys.push([9, 14, 15, 16]);
                     keys_1 = __values(keys), keys_1_1 = keys_1.next();
-                    _h.label = 10;
+                    _f.label = 10;
                 case 10:
                     if (!!keys_1_1.done) return [3 /*break*/, 13];
                     k = keys_1_1.value;
                     address = new ethereumjs_util_1.Address(Buffer.from(k, 'hex'));
                     return [4 /*yield*/, state.deleteAccount(address)];
                 case 11:
-                    _h.sent();
+                    _f.sent();
                     if (this.DEBUG) {
-                        debug("tx selfdestruct on address=".concat(address));
+                        debug("tx selfdestruct on address=" + address);
                     }
-                    _h.label = 12;
+                    _f.label = 12;
                 case 12:
                     keys_1_1 = keys_1.next();
                     return [3 /*break*/, 10];
                 case 13: return [3 /*break*/, 16];
                 case 14:
-                    e_2_1 = _h.sent();
+                    e_2_1 = _f.sent();
                     e_2 = { error: e_2_1 };
                     return [3 /*break*/, 16];
                 case 15:
                     try {
-                        if (keys_1_1 && !keys_1_1.done && (_g = keys_1.return)) _g.call(keys_1);
+                        if (keys_1_1 && !keys_1_1.done && (_e = keys_1.return)) _e.call(keys_1);
                     }
                     finally { if (e_2) throw e_2.error; }
                     return [7 /*endfinally*/];
                 case 16: return [4 /*yield*/, state.cleanupTouchedAccounts()];
                 case 17:
-                    _h.sent();
+                    _f.sent();
                     state.clearOriginalStorageCache();
-                    cumulativeGasUsed = ((_d = opts.blockGasUsed) !== null && _d !== void 0 ? _d : block.header.gasUsed).add(results.gasUsed);
-                    _f = results;
+                    cumulativeGasUsed = ((_c = opts.blockGasUsed) !== null && _c !== void 0 ? _c : block.header.gasUsed).add(results.gasUsed);
+                    _d = results;
                     return [4 /*yield*/, generateTxReceipt.bind(this)(tx, results, cumulativeGasUsed)
                         /**
                          * The `afterTx` event
@@ -445,13 +439,13 @@ function _runTx(opts) {
                          */
                     ];
                 case 18:
-                    _f.receipt = _h.sent();
+                    _d.receipt = _f.sent();
                     event = __assign({ transaction: tx }, results);
                     return [4 /*yield*/, this._emit('afterTx', event)];
                 case 19:
-                    _h.sent();
+                    _f.sent();
                     if (this.DEBUG) {
-                        debug("tx run finished hash=".concat(opts.tx.isSigned() ? opts.tx.hash().toString('hex') : 'unsigned', " sender=").concat(caller));
+                        debug("tx run finished hash=" + (opts.tx.isSigned() ? opts.tx.hash().toString('hex') : 'unsigned') + " sender=" + caller);
                     }
                     return [2 /*return*/, results];
             }
@@ -498,7 +492,7 @@ function generateTxReceipt(tx, txResult, cumulativeGasUsed) {
                         logs: (_a = txResult.execResult.logs) !== null && _a !== void 0 ? _a : [],
                     };
                     if (this.DEBUG) {
-                        debug("Generate tx receipt transactionType=".concat(tx.type, " gasUsed=").concat(cumulativeGasUsed, " bitvector=").concat((0, util_1.short)(baseReceipt.bitvector), " (").concat(baseReceipt.bitvector.length, " bytes) logs=").concat(baseReceipt.logs.length));
+                        debug("Generate tx receipt transactionType=" + tx.type + " gasUsed=" + cumulativeGasUsed + " bitvector=" + (0, util_1.short)(baseReceipt.bitvector) + " (" + baseReceipt.bitvector.length + " bytes) logs=" + baseReceipt.logs.length);
                     }
                     if (!!tx.supports(tx_1.Capability.EIP2718TypedTransaction)) return [3 /*break*/, 4];
                     if (!this._common.gteHardfork('byzantium')) return [3 /*break*/, 1];
@@ -530,7 +524,7 @@ exports.generateTxReceipt = generateTxReceipt;
 function _errorMsg(msg, vm, block, tx) {
     var blockErrorStr = 'errorStr' in block ? block.errorStr() : 'block';
     var txErrorStr = 'errorStr' in tx ? tx.errorStr() : 'tx';
-    var errorMsg = "".concat(msg, " (").concat(vm.errorStr(), " -> ").concat(blockErrorStr, " -> ").concat(txErrorStr, ")");
+    var errorMsg = msg + " (" + vm.errorStr() + " -> " + blockErrorStr + " -> " + txErrorStr + ")";
     return errorMsg;
 }
 //# sourceMappingURL=runTx.js.map

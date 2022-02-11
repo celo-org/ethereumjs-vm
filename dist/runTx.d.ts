@@ -29,7 +29,7 @@ export interface RunTxOpts {
     skipBalance?: boolean;
     /**
      * If true, skips the validation of the tx's gas limit
-     * against the block's gas limit.
+     * agains the block's gas limit.
      */
     skipBlockGasLimitValidation?: boolean;
     /**

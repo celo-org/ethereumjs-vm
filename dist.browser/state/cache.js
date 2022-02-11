@@ -35,6 +35,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var ethereumjs_util_1 = require("ethereumjs-util");
 var Tree = require('functional-red-black-tree');
@@ -42,12 +53,10 @@ var Tree = require('functional-red-black-tree');
  * @ignore
  */
 var Cache = /** @class */ (function () {
-    function Cache(opts) {
+    function Cache(trie) {
         this._cache = Tree();
-        this._getCb = opts.getCb;
-        this._putCb = opts.putCb;
-        this._deleteCb = opts.deleteCb;
         this._checkpoints = [];
+        this._trie = trie;
     }
     /**
      * Puts account to cache under its address.
@@ -94,6 +103,23 @@ var Cache = /** @class */ (function () {
         return false;
     };
     /**
+     * Looks up address in underlying trie.
+     * @param address - Address of account
+     */
+    Cache.prototype._lookupAccount = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            var rlp;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._trie.get(address.buf)];
+                    case 1:
+                        rlp = _a.sent();
+                        return [2 /*return*/, rlp ? ethereumjs_util_1.Account.fromRlpSerializedAccount(rlp) : undefined];
+                }
+            });
+        });
+    };
+    /**
      * Looks up address in cache, if not found, looks it up
      * in the underlying trie.
      * @param key - Address of account
@@ -106,7 +132,7 @@ var Cache = /** @class */ (function () {
                     case 0:
                         account = this.lookup(address);
                         if (!!account) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this._getCb(address)];
+                        return [4 /*yield*/, this._lookupAccount(address)];
                     case 1:
                         account = _a.sent();
                         if (account) {
@@ -119,6 +145,56 @@ var Cache = /** @class */ (function () {
                         }
                         _a.label = 2;
                     case 2: return [2 /*return*/, account];
+                }
+            });
+        });
+    };
+    /**
+     * Warms cache by loading their respective account from trie
+     * and putting them in cache.
+     * @param addresses - Array of addresses
+     */
+    Cache.prototype.warm = function (addresses) {
+        return __awaiter(this, void 0, void 0, function () {
+            var addresses_1, addresses_1_1, addressHex, address, account, e_1_1;
+            var e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 5, 6, 7]);
+                        addresses_1 = __values(addresses), addresses_1_1 = addresses_1.next();
+                        _b.label = 1;
+                    case 1:
+                        if (!!addresses_1_1.done) return [3 /*break*/, 4];
+                        addressHex = addresses_1_1.value;
+                        if (!addressHex) return [3 /*break*/, 3];
+                        address = new ethereumjs_util_1.Address(Buffer.from(addressHex, 'hex'));
+                        return [4 /*yield*/, this._lookupAccount(address)];
+                    case 2:
+                        account = _b.sent();
+                        if (account) {
+                            this._update(address, account, false, false, false);
+                        }
+                        else {
+                            account = new ethereumjs_util_1.Account();
+                            this._update(address, account, false, false, true);
+                        }
+                        _b.label = 3;
+                    case 3:
+                        addresses_1_1 = addresses_1.next();
+                        return [3 /*break*/, 1];
+                    case 4: return [3 /*break*/, 7];
+                    case 5:
+                        e_1_1 = _b.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 7];
+                    case 6:
+                        try {
+                            if (addresses_1_1 && !addresses_1_1.done && (_a = addresses_1.return)) _a.call(addresses_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
@@ -142,7 +218,7 @@ var Cache = /** @class */ (function () {
                         it.value.modified = false;
                         accountRlp = it.value.val;
                         keyBuf = Buffer.from(it.key, 'hex');
-                        return [4 /*yield*/, this._putCb(keyBuf, accountRlp)];
+                        return [4 /*yield*/, this._trie.put(keyBuf, accountRlp)];
                     case 2:
                         _a.sent();
                         next = it.hasNext;
@@ -155,7 +231,7 @@ var Cache = /** @class */ (function () {
                         it.value.virtual = true;
                         it.value.val = new ethereumjs_util_1.Account().serialize();
                         keyBuf = Buffer.from(it.key, 'hex');
-                        return [4 /*yield*/, this._deleteCb(keyBuf)];
+                        return [4 /*yield*/, this._trie.del(keyBuf)];
                     case 4:
                         _a.sent();
                         next = it.hasNext;

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateSstoreGas = exports.writeCallOutput = exports.subMemUsage = exports.maxCallGas = exports.jumpSubIsValid = exports.jumpIsValid = exports.getFullname = exports.getDataSlice = exports.short = exports.divCeil = exports.describeLocation = exports.addressToBuffer = exports.trap = exports.setLengthLeftStorage = void 0;
 var ethereumjs_util_1 = require("ethereumjs-util");
 var exceptions_1 = require("./../../exceptions");
+var EIP2929_1 = require("./EIP2929");
 var MASK_160 = new ethereumjs_util_1.BN(1).shln(160).subn(1);
 /**
  * Proxy function for ethereumjs-util's setLengthLeft, except it returns a zero
@@ -52,7 +53,7 @@ function describeLocation(runState) {
     var hash = (0, ethereumjs_util_1.keccak256)(runState.eei.getCode()).toString('hex');
     var address = runState.eei.getAddress().buf.toString('hex');
     var pc = runState.programCounter - 1;
-    return "".concat(hash, "/").concat(address, ":").concat(pc);
+    return hash + "/" + address + ":" + pc;
 }
 exports.describeLocation = describeLocation;
 /**
@@ -132,25 +133,25 @@ function getFullname(code, name) {
 }
 exports.getFullname = getFullname;
 /**
- * Checks if a jump is valid given a destination (defined as a 1 in the validJumps array)
+ * Checks if a jump is valid given a destination
  *
  * @param  {RunState} runState
  * @param  {number}   dest
  * @return {boolean}
  */
 function jumpIsValid(runState, dest) {
-    return runState.validJumps[dest] === 1;
+    return runState.validJumps.indexOf(dest) !== -1;
 }
 exports.jumpIsValid = jumpIsValid;
 /**
- * Checks if a jumpsub is valid given a destination (defined as a 2 in the validJumps array)
+ * Checks if a jumpsub is valid given a destination
  *
  * @param  {RunState} runState
  * @param  {number}   dest
  * @return {boolean}
  */
 function jumpSubIsValid(runState, dest) {
-    return runState.validJumps[dest] === 2;
+    return runState.validJumpSubs.indexOf(dest) !== -1;
 }
 exports.jumpSubIsValid = jumpSubIsValid;
 /**
@@ -184,22 +185,20 @@ exports.maxCallGas = maxCallGas;
 function subMemUsage(runState, offset, length, common) {
     // YP (225): access with zero length will not extend the memory
     if (length.isZero())
-        return new ethereumjs_util_1.BN(0);
+        return;
     var newMemoryWordCount = divCeil(offset.add(length), new ethereumjs_util_1.BN(32));
     if (newMemoryWordCount.lte(runState.memoryWordCount))
-        return new ethereumjs_util_1.BN(0);
+        return;
     var words = newMemoryWordCount;
     var fee = new ethereumjs_util_1.BN(common.param('gasPrices', 'memory'));
     var quadCoeff = new ethereumjs_util_1.BN(common.param('gasPrices', 'quadCoeffDiv'));
     // words * 3 + words ^2 / 512
     var cost = words.mul(fee).add(words.mul(words).div(quadCoeff));
     if (cost.gt(runState.highestMemCost)) {
-        var currentHighestMemCost = runState.highestMemCost;
-        runState.highestMemCost = cost.clone();
-        cost.isub(currentHighestMemCost);
+        runState.eei.useGas(cost.sub(runState.highestMemCost), 'subMemUsage');
+        runState.highestMemCost = cost;
     }
     runState.memoryWordCount = newMemoryWordCount;
-    return cost;
 }
 exports.subMemUsage = subMemUsage;
 /**
@@ -229,26 +228,18 @@ exports.writeCallOutput = writeCallOutput;
  * @param {Buffer}   value
  * @param {Buffer}   keyBuf
  */
-function updateSstoreGas(runState, currentStorage, value, common) {
-    if ((value.length === 0 && currentStorage.length === 0) ||
-        (value.length > 0 && currentStorage.length > 0)) {
-        var gas = new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreReset'));
-        return gas;
+function updateSstoreGas(runState, currentStorage, value, keyBuf, common) {
+    var sstoreResetCost = common.param('gasPrices', 'sstoreReset');
+    if ((value.length === 0 && !currentStorage.length) ||
+        (value.length !== 0 && currentStorage.length)) {
+        runState.eei.useGas(new ethereumjs_util_1.BN((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, keyBuf, sstoreResetCost, 'reset', common)), 'updateSstoreGas');
     }
-    else if (value.length === 0 && currentStorage.length > 0) {
-        var gas = new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreReset'));
+    else if (value.length === 0 && currentStorage.length) {
+        runState.eei.useGas(new ethereumjs_util_1.BN((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, keyBuf, sstoreResetCost, 'reset', common)), 'updateSstoreGas');
         runState.eei.refundGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreRefund')), 'updateSstoreGas');
-        return gas;
     }
-    else {
-        /*
-          The situations checked above are:
-          -> Value/Slot are both 0
-          -> Value/Slot are both nonzero
-          -> Value is zero, but slot is nonzero
-          Thus, the remaining case is where value is nonzero, but slot is zero, which is this clause
-        */
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreSet'));
+    else if (value.length !== 0 && !currentStorage.length) {
+        runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreSet')), 'updateSstoreGas');
     }
 }
 exports.updateSstoreGas = updateSstoreGas;

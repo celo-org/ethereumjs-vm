@@ -21,20 +21,20 @@ function updateSstoreGasEIP2200(runState, currentStorage, originalStorage, value
     }
     // Noop
     if (currentStorage.equals(value)) {
-        var sstoreNoopCost = new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreNoopGasEIP2200'));
-        return (0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreNoopCost, 'noop', common);
+        var sstoreNoopCost = common.param('gasPrices', 'sstoreNoopGasEIP2200');
+        return runState.eei.useGas(new ethereumjs_util_1.BN((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreNoopCost, 'noop', common)), 'EIP-2200 -> sstoreNoopGasEIP2200');
     }
     if (originalStorage.equals(currentStorage)) {
         // Create slot
         if (originalStorage.length === 0) {
-            return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreInitGasEIP2200'));
+            return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreInitGasEIP2200')), 'EIP-2200 -> sstoreInitGasEIP2200');
         }
         // Delete slot
         if (value.length === 0) {
             runState.eei.refundGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreClearRefundEIP2200')), 'EIP-2200 -> sstoreClearRefundEIP2200');
         }
         // Write existing slot
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreCleanGasEIP2200'));
+        return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreCleanGasEIP2200')), 'EIP-2200 -> sstoreCleanGasEIP2200');
     }
     if (originalStorage.length > 0) {
         if (currentStorage.length === 0) {
@@ -49,17 +49,17 @@ function updateSstoreGasEIP2200(runState, currentStorage, originalStorage, value
     if (originalStorage.equals(value)) {
         if (originalStorage.length === 0) {
             // Reset to original non-existent slot
-            var sstoreInitRefund = new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreInitRefundEIP2200'));
-            runState.eei.refundGas((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreInitRefund, 'initRefund', common), 'EIP-2200 -> initRefund');
+            var sstoreInitRefund = common.param('gasPrices', 'sstoreInitRefundEIP2200');
+            runState.eei.refundGas(new ethereumjs_util_1.BN((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreInitRefund, 'initRefund', common)), 'EIP-2200 -> initRefund');
         }
         else {
             // Reset to original existing slot
-            var sstoreCleanRefund = new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreCleanRefundEIP2200'));
-            runState.eei.refundGas((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreCleanRefund, 'cleanRefund', common), 'EIP-2200 -> cleanRefund');
+            var sstoreCleanRefund = common.param('gasPrices', 'sstoreCleanRefundEIP2200');
+            runState.eei.refundGas(new ethereumjs_util_1.BN((0, EIP2929_1.adjustSstoreGasEIP2929)(runState, key, sstoreCleanRefund, 'cleanRefund', common)), 'EIP-2200 -> cleanRefund');
         }
     }
     // Dirty update
-    return new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreDirtyGasEIP2200'));
+    return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sstoreDirtyGasEIP2200')), 'EIP-2200 -> sstoreDirtyGasEIP2200');
 }
 exports.updateSstoreGasEIP2200 = updateSstoreGasEIP2200;
 //# sourceMappingURL=EIP2200.js.map

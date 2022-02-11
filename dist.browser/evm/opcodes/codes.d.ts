@@ -5,14 +5,12 @@ export declare class Opcode {
     readonly fullName: string;
     readonly fee: number;
     readonly isAsync: boolean;
-    readonly dynamicGas: boolean;
-    constructor({ code, name, fullName, fee, isAsync, dynamicGas, }: {
+    constructor({ code, name, fullName, fee, isAsync, }: {
         code: number;
         name: string;
         fullName: string;
         fee: number;
         isAsync: boolean;
-        dynamicGas: boolean;
     });
 }
 export declare type OpcodeList = Map<number, Opcode>;

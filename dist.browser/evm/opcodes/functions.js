@@ -55,6 +55,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handlers = void 0;
 var ethereumjs_util_1 = require("ethereumjs-util");
 var util_1 = require("./util");
+var EIP1283_1 = require("./EIP1283");
+var EIP2200_1 = require("./EIP2200");
+var EIP2929_1 = require("./EIP2929");
 var exceptions_1 = require("../../exceptions");
 // the opcode functions
 exports.handlers = new Map([
@@ -402,12 +405,15 @@ exports.handlers = new Map([
     // 0x20: SHA3
     [
         0x20,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(2), 2), offset = _a[0], length = _a[1];
+            (0, util_1.subMemUsage)(runState, offset, length, common);
             var data = Buffer.alloc(0);
             if (!length.isZero()) {
                 data = runState.memory.read(offset.toNumber(), length.toNumber());
             }
+            // copy fee
+            runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sha3Word')).imul((0, util_1.divCeil)(length, new ethereumjs_util_1.BN(32))), 'SHA3 opcode');
             var r = new ethereumjs_util_1.BN((0, ethereumjs_util_1.keccak256)(data));
             runState.stack.push(r);
         },
@@ -424,7 +430,7 @@ exports.handlers = new Map([
     // 0x31: BALANCE
     [
         0x31,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
                 var addressBN, address, balance;
                 return __generator(this, function (_a) {
@@ -432,6 +438,7 @@ exports.handlers = new Map([
                         case 0:
                             addressBN = runState.stack.pop();
                             address = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(addressBN));
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, address, common);
                             return [4 /*yield*/, runState.eei.getExternalBalance(address)];
                         case 1:
                             balance = _a.sent();
@@ -490,9 +497,11 @@ exports.handlers = new Map([
     // 0x37: CALLDATACOPY
     [
         0x37,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(3), 3), memOffset = _a[0], dataOffset = _a[1], dataLength = _a[2];
+            (0, util_1.subMemUsage)(runState, memOffset, dataLength, common);
             if (!dataLength.eqn(0)) {
+                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'copy')).imul((0, util_1.divCeil)(dataLength, new ethereumjs_util_1.BN(32))), 'CALLDATACOPY opcode');
                 var data = (0, util_1.getDataSlice)(runState.eei.getCallData(), dataOffset, dataLength);
                 var memOffsetNum = memOffset.toNumber();
                 var dataLengthNum = dataLength.toNumber();
@@ -511,9 +520,11 @@ exports.handlers = new Map([
     // 0x39: CODECOPY
     [
         0x39,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(3), 3), memOffset = _a[0], codeOffset = _a[1], dataLength = _a[2];
+            (0, util_1.subMemUsage)(runState, memOffset, dataLength, common);
             if (!dataLength.eqn(0)) {
+                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'copy')).imul((0, util_1.divCeil)(dataLength, new ethereumjs_util_1.BN(32))), 'CODECOPY opcode');
                 var data = (0, util_1.getDataSlice)(runState.eei.getCode(), codeOffset, dataLength);
                 var memOffsetNum = memOffset.toNumber();
                 var lengthNum = dataLength.toNumber();
@@ -525,13 +536,15 @@ exports.handlers = new Map([
     // 0x3b: EXTCODESIZE
     [
         0x3b,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var addressBN, size;
+                var addressBN, address, size;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             addressBN = runState.stack.pop();
+                            address = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(addressBN));
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, address, common);
                             return [4 /*yield*/, runState.eei.getExternalCodeSize(addressBN)];
                         case 1:
                             size = _a.sent();
@@ -545,14 +558,20 @@ exports.handlers = new Map([
     // 0x3c: EXTCODECOPY
     [
         0x3c,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var _a, addressBN, memOffset, codeOffset, dataLength, code, data, memOffsetNum, lengthNum;
+                var _a, addressBN, memOffset, codeOffset, dataLength, address, code, data, memOffsetNum, lengthNum;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             _a = __read(runState.stack.popN(4), 4), addressBN = _a[0], memOffset = _a[1], codeOffset = _a[2], dataLength = _a[3];
+                            // FIXME: for some reason this must come before subGas
+                            (0, util_1.subMemUsage)(runState, memOffset, dataLength, common);
+                            address = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(addressBN));
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, address, common);
                             if (!!dataLength.eqn(0)) return [3 /*break*/, 2];
+                            // copy fee
+                            runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'copy')).imul((0, util_1.divCeil)(dataLength, new ethereumjs_util_1.BN(32))), 'EXTCODECOPY opcode');
                             return [4 /*yield*/, runState.eei.getExternalCode(addressBN)];
                         case 1:
                             code = _b.sent();
@@ -571,7 +590,7 @@ exports.handlers = new Map([
     // 0x3f: EXTCODEHASH
     [
         0x3f,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
                 var addressBN, address, empty, code;
                 return __generator(this, function (_a) {
@@ -579,6 +598,7 @@ exports.handlers = new Map([
                         case 0:
                             addressBN = runState.stack.pop();
                             address = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(addressBN));
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, address, common);
                             return [4 /*yield*/, runState.eei.isAccountEmpty(address)];
                         case 1:
                             empty = _a.sent();
@@ -610,9 +630,14 @@ exports.handlers = new Map([
     // 0x3e: RETURNDATACOPY
     [
         0x3e,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(3), 3), memOffset = _a[0], returnDataOffset = _a[1], dataLength = _a[2];
+            if (returnDataOffset.add(dataLength).gt(runState.eei.getReturnDataSize())) {
+                (0, util_1.trap)(exceptions_1.ERROR.OUT_OF_GAS);
+            }
+            (0, util_1.subMemUsage)(runState, memOffset, dataLength, common);
             if (!dataLength.eqn(0)) {
+                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'copy')).mul((0, util_1.divCeil)(dataLength, new ethereumjs_util_1.BN(32))), 'RETURNDATACOPY opcode');
                 var data = (0, util_1.getDataSlice)(runState.eei.getReturnData(), returnDataOffset, dataLength);
                 var memOffsetNum = memOffset.toNumber();
                 var lengthNum = dataLength.toNumber();
@@ -676,16 +701,11 @@ exports.handlers = new Map([
             runState.stack.push(runState.eei.getBlockNumber());
         },
     ],
-    // 0x44: DIFFICULTY (EIP-4399: supplanted as RANDOM)
+    // 0x44: DIFFICULTY
     [
         0x44,
-        function (runState, common) {
-            if (common.isActivatedEIP(4399)) {
-                runState.stack.push(runState.eei.getBlockRandom());
-            }
-            else {
-                runState.stack.push(runState.eei.getBlockDifficulty());
-            }
+        function (runState) {
+            runState.stack.push(runState.eei.getBlockDifficulty());
         },
     ],
     // 0x45: GASLIMIT
@@ -727,8 +747,9 @@ exports.handlers = new Map([
     // 0x51: MLOAD
     [
         0x51,
-        function (runState) {
+        function (runState, common) {
             var pos = runState.stack.pop();
+            (0, util_1.subMemUsage)(runState, pos, new ethereumjs_util_1.BN(32), common);
             var word = runState.memory.read(pos.toNumber(), 32);
             runState.stack.push(new ethereumjs_util_1.BN(word));
         },
@@ -736,9 +757,10 @@ exports.handlers = new Map([
     // 0x52: MSTORE
     [
         0x52,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(2), 2), offset = _a[0], word = _a[1];
             var buf = word.toArrayLike(Buffer, 'be', 32);
+            (0, util_1.subMemUsage)(runState, offset, new ethereumjs_util_1.BN(32), common);
             var offsetNum = offset.toNumber();
             runState.memory.extend(offsetNum, 32);
             runState.memory.write(offsetNum, 32, buf);
@@ -747,12 +769,13 @@ exports.handlers = new Map([
     // 0x53: MSTORE8
     [
         0x53,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(2), 2), offset = _a[0], byte = _a[1];
             // NOTE: we're using a 'trick' here to get the least significant byte
             // NOTE: force cast necessary because `BN.andln` returns number but
             // the types are wrong
             var buf = Buffer.from([byte.andln(0xff)]);
+            (0, util_1.subMemUsage)(runState, offset, new ethereumjs_util_1.BN(1), common);
             var offsetNum = offset.toNumber();
             runState.memory.extend(offsetNum, 1);
             runState.memory.write(offsetNum, 1, buf);
@@ -761,7 +784,7 @@ exports.handlers = new Map([
     // 0x54: SLOAD
     [
         0x54,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
                 var key, keyBuf, value, valueBN;
                 return __generator(this, function (_a) {
@@ -769,6 +792,7 @@ exports.handlers = new Map([
                         case 0:
                             key = runState.stack.pop();
                             keyBuf = key.toArrayLike(Buffer, 'be', 32);
+                            (0, EIP2929_1.accessStorageEIP2929)(runState, keyBuf, false, common);
                             return [4 /*yield*/, runState.eei.storageLoad(keyBuf)];
                         case 1:
                             value = _a.sent();
@@ -783,12 +807,15 @@ exports.handlers = new Map([
     // 0x55: SSTORE
     [
         0x55,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var _a, key, val, keyBuf, value;
-                return __generator(this, function (_b) {
-                    switch (_b.label) {
+                var _a, key, val, keyBuf, value, currentStorage, _b, originalStorage, _c;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
                         case 0:
+                            if (runState.eei.isStatic()) {
+                                (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
+                            }
                             _a = __read(runState.stack.popN(2), 2), key = _a[0], val = _a[1];
                             keyBuf = key.toArrayLike(Buffer, 'be', 32);
                             if (val.isZero()) {
@@ -797,9 +824,32 @@ exports.handlers = new Map([
                             else {
                                 value = val.toArrayLike(Buffer, 'be');
                             }
-                            return [4 /*yield*/, runState.eei.storageStore(keyBuf, value)];
+                            _b = util_1.setLengthLeftStorage;
+                            return [4 /*yield*/, runState.eei.storageLoad(keyBuf)];
                         case 1:
-                            _b.sent();
+                            currentStorage = _b.apply(void 0, [_d.sent()]);
+                            if (!(common.hardfork() === 'constantinople' || common.gteHardfork('istanbul'))) return [3 /*break*/, 3];
+                            _c = util_1.setLengthLeftStorage;
+                            return [4 /*yield*/, runState.eei.storageLoad(keyBuf, true)];
+                        case 2:
+                            originalStorage = _c.apply(void 0, [_d.sent()]);
+                            if (common.hardfork() === 'constantinople') {
+                                (0, EIP1283_1.updateSstoreGasEIP1283)(runState, currentStorage, originalStorage, (0, util_1.setLengthLeftStorage)(value), common);
+                            }
+                            else {
+                                (0, EIP2200_1.updateSstoreGasEIP2200)(runState, currentStorage, originalStorage, (0, util_1.setLengthLeftStorage)(value), keyBuf, common);
+                            }
+                            return [3 /*break*/, 4];
+                        case 3:
+                            (0, util_1.updateSstoreGas)(runState, currentStorage, (0, util_1.setLengthLeftStorage)(value), keyBuf, common);
+                            _d.label = 4;
+                        case 4:
+                            // We have to do this after the Istanbul (EIP2200) checks.
+                            // Otherwise, we might run out of gas, due to "sentry check" of 2300 gas, if we deduct extra gas first.
+                            (0, EIP2929_1.accessStorageEIP2929)(runState, keyBuf, true, common);
+                            return [4 /*yield*/, runState.eei.storageStore(keyBuf, value)];
+                        case 5:
+                            _d.sent();
                             return [2 /*return*/];
                     }
                 });
@@ -895,13 +945,6 @@ exports.handlers = new Map([
             runState.programCounter = destNum + 1;
         },
     ],
-    // 0x5f: PUSH0
-    [
-        0x5f,
-        function (runState) {
-            runState.stack.push(new ethereumjs_util_1.BN(0));
-        },
-    ],
     // 0x60: PUSH
     [
         0x60,
@@ -931,17 +974,27 @@ exports.handlers = new Map([
     // 0xa0: LOG
     [
         0xa0,
-        function (runState) {
+        function (runState, common) {
+            if (runState.eei.isStatic()) {
+                (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
+            }
             var _a = __read(runState.stack.popN(2), 2), memOffset = _a[0], memLength = _a[1];
             var topicsCount = runState.opCode - 0xa0;
+            if (topicsCount < 0 || topicsCount > 4) {
+                (0, util_1.trap)(exceptions_1.ERROR.OUT_OF_RANGE);
+            }
             var topics = runState.stack.popN(topicsCount);
             var topicsBuf = topics.map(function (a) {
                 return a.toArrayLike(Buffer, 'be', 32);
             });
+            (0, util_1.subMemUsage)(runState, memOffset, memLength, common);
             var mem = Buffer.alloc(0);
             if (!memLength.isZero()) {
                 mem = runState.memory.read(memOffset.toNumber(), memLength.toNumber());
             }
+            runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'logTopic'))
+                .imuln(topicsCount)
+                .iadd(memLength.muln(common.param('gasPrices', 'logData'))), 'LOG opcode');
             runState.eei.log(mem, topicsCount, topicsBuf);
         },
     ],
@@ -949,15 +1002,20 @@ exports.handlers = new Map([
     // 0xf0: CREATE
     [
         0xf0,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, offset, length, gasLimit, data, ret;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
+                            if (runState.eei.isStatic()) {
+                                (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
+                            }
                             _a = __read(runState.stack.popN(3), 3), value = _a[0], offset = _a[1], length = _a[2];
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, runState.eei.getAddress(), common, false);
+                            (0, util_1.subMemUsage)(runState, offset, length, common);
+                            gasLimit = new ethereumjs_util_1.BN(runState.eei.getGasLeft());
+                            gasLimit = (0, util_1.maxCallGas)(gasLimit, runState.eei.getGasLeft(), runState, common);
                             data = Buffer.alloc(0);
                             if (!length.isZero()) {
                                 data = runState.memory.read(offset.toNumber(), length.toNumber());
@@ -975,7 +1033,7 @@ exports.handlers = new Map([
     // 0xf5: CREATE2
     [
         0xf5,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, offset, length, salt, gasLimit, data, ret;
                 return __generator(this, function (_b) {
@@ -985,8 +1043,12 @@ exports.handlers = new Map([
                                 (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
                             }
                             _a = __read(runState.stack.popN(4), 4), value = _a[0], offset = _a[1], length = _a[2], salt = _a[3];
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
+                            (0, util_1.subMemUsage)(runState, offset, length, common);
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, runState.eei.getAddress(), common, false);
+                            // Deduct gas costs for hashing
+                            runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'sha3Word')).imul((0, util_1.divCeil)(length, new ethereumjs_util_1.BN(32))), 'CREATE2 opcode');
+                            gasLimit = new ethereumjs_util_1.BN(runState.eei.getGasLeft());
+                            gasLimit = (0, util_1.maxCallGas)(gasLimit, runState.eei.getGasLeft(), runState, common); // CREATE2 is only available after TangerineWhistle (Constantinople introduced this opcode)
                             data = Buffer.alloc(0);
                             if (!length.isZero()) {
                                 data = runState.memory.read(offset.toNumber(), length.toNumber());
@@ -1004,24 +1066,59 @@ exports.handlers = new Map([
     // 0xf1: CALL
     [
         0xf1,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var _a, _currentGasLimit, toAddr, value, inOffset, inLength, outOffset, outLength, toAddress, data, gasLimit, ret;
+                var _a, currentGasLimit, toAddr, value, inOffset, inLength, outOffset, outLength, toAddress, data, gasLimit, callStipend, ret;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
-                            _a = __read(runState.stack.popN(7), 7), _currentGasLimit = _a[0], toAddr = _a[1], value = _a[2], inOffset = _a[3], inLength = _a[4], outOffset = _a[5], outLength = _a[6];
+                            _a = __read(runState.stack.popN(7), 7), currentGasLimit = _a[0], toAddr = _a[1], value = _a[2], inOffset = _a[3], inLength = _a[4], outOffset = _a[5], outLength = _a[6];
                             toAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(toAddr));
+                            if (runState.eei.isStatic() && !value.isZero()) {
+                                (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
+                            }
+                            (0, util_1.subMemUsage)(runState, inOffset, inLength, common);
+                            (0, util_1.subMemUsage)(runState, outOffset, outLength, common);
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, toAddress, common);
+                            if (!value.isZero()) {
+                                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'callValueTransfer')), 'CALL opcode -> callValueTransfer');
+                            }
                             data = Buffer.alloc(0);
                             if (!inLength.isZero()) {
                                 data = runState.memory.read(inOffset.toNumber(), inLength.toNumber());
                             }
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
+                            if (!common.gteHardfork('spuriousDragon')) return [3 /*break*/, 2];
+                            return [4 /*yield*/, runState.eei.isAccountEmpty(toAddress)];
+                        case 1:
+                            // We are at or after Spurious Dragon
+                            // Call new account gas: account is DEAD and we transfer nonzero value
+                            if ((_b.sent()) && !value.isZero()) {
+                                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'callNewAccount')), 'CALL opcode -> callNewAccount (>= SpuriousDragon)');
+                            }
+                            return [3 /*break*/, 4];
+                        case 2: return [4 /*yield*/, runState.eei.accountExists(toAddress)];
+                        case 3:
+                            if (!(_b.sent())) {
+                                // We are before Spurious Dragon and the account does not exist.
+                                // Call new account gas: account does not exist (it is not in the state trie, not even as an "empty" account)
+                                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'callNewAccount')), 'CALL opcode -> callNewAccount (< SpuriousDragon)');
+                            }
+                            _b.label = 4;
+                        case 4:
+                            gasLimit = (0, util_1.maxCallGas)(currentGasLimit, runState.eei.getGasLeft(), runState, common);
+                            // note that TangerineWhistle or later this cannot happen (it could have ran out of gas prior to getting here though)
+                            if (gasLimit.gt(runState.eei.getGasLeft())) {
+                                (0, util_1.trap)(exceptions_1.ERROR.OUT_OF_GAS);
+                            }
+                            if (!value.isZero()) {
+                                callStipend = new ethereumjs_util_1.BN(common.param('gasPrices', 'callStipend'));
+                                runState.eei.addStipend(callStipend);
+                                gasLimit.iadd(callStipend);
+                            }
                             return [4 /*yield*/, runState.eei.call(gasLimit, toAddress, value, data)
                                 // Write return data to memory
                             ];
-                        case 1:
+                        case 5:
                             ret = _b.sent();
                             // Write return data to memory
                             (0, util_1.writeCallOutput)(runState, outOffset, outLength);
@@ -1035,16 +1132,30 @@ exports.handlers = new Map([
     // 0xf2: CALLCODE
     [
         0xf2,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var _a, _currentGasLimit, toAddr, value, inOffset, inLength, outOffset, outLength, toAddress, gasLimit, data, ret;
+                var _a, currentGasLimit, toAddr, value, inOffset, inLength, outOffset, outLength, toAddress, gasLimit, callStipend, data, ret;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
-                            _a = __read(runState.stack.popN(7), 7), _currentGasLimit = _a[0], toAddr = _a[1], value = _a[2], inOffset = _a[3], inLength = _a[4], outOffset = _a[5], outLength = _a[6];
+                            _a = __read(runState.stack.popN(7), 7), currentGasLimit = _a[0], toAddr = _a[1], value = _a[2], inOffset = _a[3], inLength = _a[4], outOffset = _a[5], outLength = _a[6];
                             toAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(toAddr));
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
+                            (0, util_1.subMemUsage)(runState, inOffset, inLength, common);
+                            (0, util_1.subMemUsage)(runState, outOffset, outLength, common);
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, toAddress, common);
+                            if (!value.isZero()) {
+                                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'callValueTransfer')), 'CALLCODE opcode -> callValueTransfer');
+                            }
+                            gasLimit = (0, util_1.maxCallGas)(currentGasLimit, runState.eei.getGasLeft(), runState, common);
+                            // note that TangerineWhistle or later this cannot happen (it could have ran out of gas prior to getting here though)
+                            if (gasLimit.gt(runState.eei.getGasLeft())) {
+                                (0, util_1.trap)(exceptions_1.ERROR.OUT_OF_GAS);
+                            }
+                            if (!value.isZero()) {
+                                callStipend = new ethereumjs_util_1.BN(common.param('gasPrices', 'callStipend'));
+                                runState.eei.addStipend(callStipend);
+                                gasLimit.iadd(callStipend);
+                            }
                             data = Buffer.alloc(0);
                             if (!inLength.isZero()) {
                                 data = runState.memory.read(inOffset.toNumber(), inLength.toNumber());
@@ -1066,21 +1177,27 @@ exports.handlers = new Map([
     // 0xf4: DELEGATECALL
     [
         0xf4,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var value, _a, _currentGasLimit, toAddr, inOffset, inLength, outOffset, outLength, toAddress, data, gasLimit, ret;
+                var value, _a, currentGasLimit, toAddr, inOffset, inLength, outOffset, outLength, toAddress, gasLimit, data, ret;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             value = runState.eei.getCallValue();
-                            _a = __read(runState.stack.popN(6), 6), _currentGasLimit = _a[0], toAddr = _a[1], inOffset = _a[2], inLength = _a[3], outOffset = _a[4], outLength = _a[5];
+                            _a = __read(runState.stack.popN(6), 6), currentGasLimit = _a[0], toAddr = _a[1], inOffset = _a[2], inLength = _a[3], outOffset = _a[4], outLength = _a[5];
                             toAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(toAddr));
+                            (0, util_1.subMemUsage)(runState, inOffset, inLength, common);
+                            (0, util_1.subMemUsage)(runState, outOffset, outLength, common);
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, toAddress, common);
+                            gasLimit = (0, util_1.maxCallGas)(currentGasLimit, runState.eei.getGasLeft(), runState, common);
+                            // note that TangerineWhistle or later this cannot happen (it could have ran out of gas prior to getting here though)
+                            if (gasLimit.gt(runState.eei.getGasLeft())) {
+                                (0, util_1.trap)(exceptions_1.ERROR.OUT_OF_GAS);
+                            }
                             data = Buffer.alloc(0);
                             if (!inLength.isZero()) {
                                 data = runState.memory.read(inOffset.toNumber(), inLength.toNumber());
                             }
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
                             return [4 /*yield*/, runState.eei.callDelegate(gasLimit, toAddress, value, data)
                                 // Write return data to memory
                             ];
@@ -1098,17 +1215,20 @@ exports.handlers = new Map([
     // 0x06: STATICCALL
     [
         0xfa,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var value, _a, _currentGasLimit, toAddr, inOffset, inLength, outOffset, outLength, toAddress, gasLimit, data, ret;
+                var value, _a, currentGasLimit, toAddr, inOffset, inLength, outOffset, outLength, toAddress, gasLimit, data, ret;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             value = new ethereumjs_util_1.BN(0);
-                            _a = __read(runState.stack.popN(6), 6), _currentGasLimit = _a[0], toAddr = _a[1], inOffset = _a[2], inLength = _a[3], outOffset = _a[4], outLength = _a[5];
+                            _a = __read(runState.stack.popN(6), 6), currentGasLimit = _a[0], toAddr = _a[1], inOffset = _a[2], inLength = _a[3], outOffset = _a[4], outLength = _a[5];
                             toAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(toAddr));
-                            gasLimit = runState.messageGasLimit;
-                            runState.messageGasLimit = undefined;
+                            (0, util_1.subMemUsage)(runState, inOffset, inLength, common);
+                            (0, util_1.subMemUsage)(runState, outOffset, outLength, common);
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, toAddress, common);
+                            gasLimit = (0, util_1.maxCallGas)(currentGasLimit, runState.eei.getGasLeft(), runState, common) // we set TangerineWhistle or later to true here, as STATICCALL was available from Byzantium (which is after TangerineWhistle)
+                            ;
                             data = Buffer.alloc(0);
                             if (!inLength.isZero()) {
                                 data = runState.memory.read(inOffset.toNumber(), inLength.toNumber());
@@ -1130,8 +1250,9 @@ exports.handlers = new Map([
     // 0xf3: RETURN
     [
         0xf3,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(2), 2), offset = _a[0], length = _a[1];
+            (0, util_1.subMemUsage)(runState, offset, length, common);
             var returnData = Buffer.alloc(0);
             if (!length.isZero()) {
                 returnData = runState.memory.read(offset.toNumber(), length.toNumber());
@@ -1142,8 +1263,9 @@ exports.handlers = new Map([
     // 0xfd: REVERT
     [
         0xfd,
-        function (runState) {
+        function (runState, common) {
             var _a = __read(runState.stack.popN(2), 2), offset = _a[0], length = _a[1];
+            (0, util_1.subMemUsage)(runState, offset, length, common);
             var returnData = Buffer.alloc(0);
             if (!length.isZero()) {
                 returnData = runState.memory.read(offset.toNumber(), length.toNumber());
@@ -1155,13 +1277,47 @@ exports.handlers = new Map([
     // 0xff: SELFDESTRUCT
     [
         0xff,
-        function (runState) {
+        function (runState, common) {
             return __awaiter(this, void 0, void 0, function () {
-                var selfdestructToAddressBN, selfdestructToAddress;
+                var selfdestructToAddressBN, selfdestructToAddress, deductGas, balance, empty, exists;
                 return __generator(this, function (_a) {
-                    selfdestructToAddressBN = runState.stack.pop();
-                    selfdestructToAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(selfdestructToAddressBN));
-                    return [2 /*return*/, runState.eei.selfDestruct(selfdestructToAddress)];
+                    switch (_a.label) {
+                        case 0:
+                            selfdestructToAddressBN = runState.stack.pop();
+                            if (runState.eei.isStatic()) {
+                                (0, util_1.trap)(exceptions_1.ERROR.STATIC_STATE_CHANGE);
+                            }
+                            selfdestructToAddress = new ethereumjs_util_1.Address((0, util_1.addressToBuffer)(selfdestructToAddressBN));
+                            deductGas = false;
+                            if (!common.gteHardfork('spuriousDragon')) return [3 /*break*/, 4];
+                            return [4 /*yield*/, runState.eei.getExternalBalance(runState.eei.getAddress())];
+                        case 1:
+                            balance = _a.sent();
+                            if (!balance.gtn(0)) return [3 /*break*/, 3];
+                            return [4 /*yield*/, runState.eei.isAccountEmpty(selfdestructToAddress)];
+                        case 2:
+                            empty = _a.sent();
+                            if (empty) {
+                                deductGas = true;
+                            }
+                            _a.label = 3;
+                        case 3: return [3 /*break*/, 6];
+                        case 4:
+                            if (!common.gteHardfork('tangerineWhistle')) return [3 /*break*/, 6];
+                            return [4 /*yield*/, runState.stateManager.accountExists(selfdestructToAddress)];
+                        case 5:
+                            exists = _a.sent();
+                            if (!exists) {
+                                deductGas = true;
+                            }
+                            _a.label = 6;
+                        case 6:
+                            if (deductGas) {
+                                runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'callNewAccount')), 'SELFDESTRUCT opcode -> callNewAccount');
+                            }
+                            (0, EIP2929_1.accessAddressEIP2929)(runState, selfdestructToAddress, common, true, true);
+                            return [2 /*return*/, runState.eei.selfDestruct(selfdestructToAddress)];
+                    }
                 });
             });
         },

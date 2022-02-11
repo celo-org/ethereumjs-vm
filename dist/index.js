@@ -76,11 +76,11 @@ class VM extends AsyncEventEmitter {
             throw new Error('Chain/hardfork options are not allowed any more on initialization');
         }
         if (opts.common) {
-            // Supported EIPs
-            const supportedEIPs = [1559, 2315, 2537, 2565, 2718, 2929, 2930, 3198, 3529, 3541, 3607, 3855];
+            //EIPs
+            const supportedEIPs = [1559, 2315, 2537, 2565, 2718, 2929, 2930, 3198, 3529, 3541];
             for (const eip of opts.common.eips()) {
                 if (!supportedEIPs.includes(eip)) {
-                    throw new Error(`EIP-${eip} is not supported by the VM`);
+                    throw new Error(`${eip} is not supported by the VM`);
                 }
             }
             this._common = opts.common;

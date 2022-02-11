@@ -1,7 +1,5 @@
 /// <reference types="node" />
-/// <reference types="bn.js" />
 import Common from '@ethereumjs/common';
-import { BN } from 'ethereumjs-util';
 import { RunState } from './../interpreter';
 /**
  * Adjusts gas usage and refunds of SStore ops per EIP-2200 (Istanbul)
@@ -12,4 +10,4 @@ import { RunState } from './../interpreter';
  * @param {Buffer}   value
  * @param {Common}   common
  */
-export declare function updateSstoreGasEIP2200(runState: RunState, currentStorage: Buffer, originalStorage: Buffer, value: Buffer, key: Buffer, common: Common): BN;
+export declare function updateSstoreGasEIP2200(runState: RunState, currentStorage: Buffer, originalStorage: Buffer, value: Buffer, key: Buffer, common: Common): void;

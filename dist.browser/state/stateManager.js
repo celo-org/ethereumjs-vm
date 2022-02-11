@@ -1,19 +1,23 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -61,81 +65,82 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var Set = require('core-js-pure/es/set');
+var debug_1 = require("debug");
 var merkle_patricia_tree_1 = require("merkle-patricia-tree");
 var ethereumjs_util_1 = require("ethereumjs-util");
+var common_1 = __importStar(require("@ethereumjs/common"));
 var cache_1 = __importDefault(require("./cache"));
-var _1 = require("./");
+var precompiles_1 = require("../evm/precompiles");
 var opcodes_1 = require("../evm/opcodes");
+var debug = (0, debug_1.debug)('vm:state');
 /**
- * Default StateManager implementation for the VM.
- *
- * The state manager abstracts from the underlying data store
- * by providing higher level access to accounts, contract code
- * and storage slots.
- *
- * The default state manager implementation uses a
- * `merkle-patricia-tree` trie as a data backend.
+ * Interface for getting and setting data from an underlying
+ * state trie.
  */
-var DefaultStateManager = /** @class */ (function (_super) {
-    __extends(DefaultStateManager, _super);
+var DefaultStateManager = /** @class */ (function () {
     /**
      * Instantiate the StateManager interface.
      */
     function DefaultStateManager(opts) {
         if (opts === void 0) { opts = {}; }
         var _a;
-        var _this = _super.call(this, opts) || this;
-        _this._trie = (_a = opts.trie) !== null && _a !== void 0 ? _a : new merkle_patricia_tree_1.SecureTrie();
-        _this._storageTries = {};
-        /*
-         * For a custom StateManager implementation adopt these
-         * callbacks passed to the `Cache` instantiated to perform
-         * the `get`, `put` and `delete` operations with the
-         * desired backend.
+        /**
+         * StateManager is run in DEBUG mode (default: false)
+         * Taken from DEBUG environment variable
+         *
+         * Safeguards on debug() calls are added for
+         * performance reasons to avoid string literal evaluation
+         * @hidden
          */
-        var getCb = function (address) { return __awaiter(_this, void 0, void 0, function () {
-            var rlp;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this._trie.get(address.buf)];
-                    case 1:
-                        rlp = _a.sent();
-                        return [2 /*return*/, rlp ? ethereumjs_util_1.Account.fromRlpSerializedAccount(rlp) : undefined];
-                }
-            });
-        }); };
-        var putCb = function (keyBuf, accountRlp) { return __awaiter(_this, void 0, void 0, function () {
-            var trie;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        trie = this._trie;
-                        return [4 /*yield*/, trie.put(keyBuf, accountRlp)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); };
-        var deleteCb = function (keyBuf) { return __awaiter(_this, void 0, void 0, function () {
-            var trie;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        trie = this._trie;
-                        return [4 /*yield*/, trie.del(keyBuf)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); };
-        _this._cache = new cache_1.default({ getCb: getCb, putCb: putCb, deleteCb: deleteCb });
-        return _this;
+        this.DEBUG = false;
+        var common = opts.common;
+        if (!common) {
+            common = new common_1.default({ chain: common_1.Chain.Mainnet, hardfork: common_1.Hardfork.Petersburg });
+        }
+        this._common = common;
+        this._trie = (_a = opts.trie) !== null && _a !== void 0 ? _a : new merkle_patricia_tree_1.SecureTrie();
+        this._storageTries = {};
+        this._cache = new cache_1.default(this._trie);
+        this._touched = new Set();
+        this._touchedStack = [];
+        this._checkpointCount = 0;
+        this._originalStorageCache = new Map();
+        this._accessedStorage = [new Map()];
+        this._accessedStorageReverted = [new Map()];
+        // Safeguard if "process" is not available (browser)
+        if (process !== undefined && process.env.DEBUG) {
+            this.DEBUG = true;
+        }
     }
     /**
      * Copies the current instance of the `StateManager`
@@ -147,6 +152,66 @@ var DefaultStateManager = /** @class */ (function (_super) {
             trie: this._trie.copy(false),
             common: this._common,
         });
+    };
+    /**
+     * Gets the account associated with `address`. Returns an empty account if the account does not exist.
+     * @param address - Address of the `account` to get
+     */
+    DefaultStateManager.prototype.getAccount = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            var account;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._cache.getOrLoad(address)];
+                    case 1:
+                        account = _a.sent();
+                        return [2 /*return*/, account];
+                }
+            });
+        });
+    };
+    /**
+     * Saves an account into state under the provided `address`.
+     * @param address - Address under which to store `account`
+     * @param account - The account to store
+     */
+    DefaultStateManager.prototype.putAccount = function (address, account) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                if (this.DEBUG) {
+                    debug("Save account address=" + address + " nonce=" + account.nonce + " balance=" + account.balance + " contract=" + (account.isContract() ? 'yes' : 'no') + " empty=" + (account.isEmpty() ? 'yes' : 'no'));
+                }
+                this._cache.put(address, account);
+                this.touchAccount(address);
+                return [2 /*return*/];
+            });
+        });
+    };
+    /**
+     * Deletes an account from state under the provided `address`. The account will also be removed from the state trie.
+     * @param address - Address of the account which should be deleted
+     */
+    DefaultStateManager.prototype.deleteAccount = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                if (this.DEBUG) {
+                    debug("Delete account " + address);
+                }
+                this._cache.del(address);
+                this.touchAccount(address);
+                return [2 /*return*/];
+            });
+        });
+    };
+    /**
+     * Marks an account as touched, according to the definition
+     * in [EIP-158](https://eips.ethereum.org/EIPS/eip-158).
+     * This happens when the account is triggered for a state-changing
+     * event. Touched accounts that are empty will be cleared
+     * at the end of the tx.
+     */
+    DefaultStateManager.prototype.touchAccount = function (address) {
+        this._touched.add(address.buf.toString('hex'));
     };
     /**
      * Adds `value` to the state trie as code, and sets `codeHash` on the account
@@ -171,7 +236,7 @@ var DefaultStateManager = /** @class */ (function (_super) {
                     case 2:
                         account = _a.sent();
                         if (this.DEBUG) {
-                            this._debug("Update codeHash (-> ".concat((0, opcodes_1.short)(codeHash), ") for account ").concat(address));
+                            debug("Update codeHash (-> " + (0, opcodes_1.short)(codeHash) + ") for account " + address);
                         }
                         account.codeHash = codeHash;
                         return [4 /*yield*/, this.putAccount(address, account)];
@@ -283,6 +348,57 @@ var DefaultStateManager = /** @class */ (function (_super) {
         });
     };
     /**
+     * Caches the storage value associated with the provided `address` and `key`
+     * on first invocation, and returns the cached (original) value from then
+     * onwards. This is used to get the original value of a storage slot for
+     * computing gas costs according to EIP-1283.
+     * @param address - Address of the account to get the storage for
+     * @param key - Key in the account's storage to get the value for. Must be 32 bytes long.
+     */
+    DefaultStateManager.prototype.getOriginalContractStorage = function (address, key) {
+        return __awaiter(this, void 0, void 0, function () {
+            var addressHex, keyHex, map, current;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (key.length !== 32) {
+                            throw new Error('Storage key must be 32 bytes long');
+                        }
+                        addressHex = address.buf.toString('hex');
+                        keyHex = key.toString('hex');
+                        if (!this._originalStorageCache.has(addressHex)) {
+                            map = new Map();
+                            this._originalStorageCache.set(addressHex, map);
+                        }
+                        else {
+                            map = this._originalStorageCache.get(addressHex);
+                        }
+                        if (!map.has(keyHex)) return [3 /*break*/, 1];
+                        return [2 /*return*/, map.get(keyHex)];
+                    case 1: return [4 /*yield*/, this.getContractStorage(address, key)];
+                    case 2:
+                        current = _a.sent();
+                        map.set(keyHex, current);
+                        return [2 /*return*/, current];
+                }
+            });
+        });
+    };
+    /**
+     * Clears the original storage cache. Refer to {@link StateManager.getOriginalContractStorage}
+     * for more explanation.
+     */
+    DefaultStateManager.prototype._clearOriginalStorageCache = function () {
+        this._originalStorageCache = new Map();
+    };
+    /**
+     * Clears the original storage cache. Refer to {@link StateManager.getOriginalContractStorage}
+     * for more explanation. Alias of the internal {@link StateManager._clearOriginalStorageCache}
+     */
+    DefaultStateManager.prototype.clearOriginalStorageCache = function () {
+        this._clearOriginalStorageCache();
+    };
+    /**
      * Modifies the storage trie of an account.
      * @private
      * @param address -  Address of the account whose storage is to be modified
@@ -354,7 +470,7 @@ var DefaultStateManager = /** @class */ (function (_super) {
                                             if (!(value && value.length)) return [3 /*break*/, 2];
                                             encodedValue = ethereumjs_util_1.rlp.encode(value);
                                             if (this.DEBUG) {
-                                                this._debug("Update contract storage for account ".concat(address, " to ").concat((0, opcodes_1.short)(value)));
+                                                debug("Update contract storage for account " + address + " to " + (0, opcodes_1.short)(value));
                                             }
                                             return [4 /*yield*/, storageTrie.put(key, encodedValue)];
                                         case 1:
@@ -363,7 +479,7 @@ var DefaultStateManager = /** @class */ (function (_super) {
                                         case 2:
                                             // deleting a value
                                             if (this.DEBUG) {
-                                                this._debug("Delete contract storage for account");
+                                                debug("Delete contract storage for account");
                                             }
                                             return [4 /*yield*/, storageTrie.del(key)];
                                         case 3:
@@ -409,16 +525,33 @@ var DefaultStateManager = /** @class */ (function (_super) {
     DefaultStateManager.prototype.checkpoint = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        this._trie.checkpoint();
-                        return [4 /*yield*/, _super.prototype.checkpoint.call(this)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
+                this._trie.checkpoint();
+                this._cache.checkpoint();
+                this._touchedStack.push(new Set(Array.from(this._touched)));
+                this._accessedStorage.push(new Map());
+                this._checkpointCount++;
+                return [2 /*return*/];
             });
         });
+    };
+    /**
+     * Merges a storage map into the last item of the accessed storage stack
+     */
+    DefaultStateManager.prototype._accessedStorageMerge = function (storageList, storageMap) {
+        var mapTarget = storageList[storageList.length - 1];
+        if (mapTarget) {
+            // Note: storageMap is always defined here per definition (TypeScript cannot infer this)
+            storageMap === null || storageMap === void 0 ? void 0 : storageMap.forEach(function (slotSet, addressString) {
+                var addressExists = mapTarget.get(addressString);
+                if (!addressExists) {
+                    mapTarget.set(addressString, new Set());
+                }
+                var storageSet = mapTarget.get(addressString);
+                slotSet.forEach(function (value) {
+                    storageSet.add(value);
+                });
+            });
+        }
     };
     /**
      * Commits the current change-set to the instance since the
@@ -426,18 +559,32 @@ var DefaultStateManager = /** @class */ (function (_super) {
      */
     DefaultStateManager.prototype.commit = function () {
         return __awaiter(this, void 0, void 0, function () {
+            var storageMap;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: 
                     // setup trie checkpointing
-                    return [4 /*yield*/, this._trie.commit()];
+                    return [4 /*yield*/, this._trie.commit()
+                        // setup cache checkpointing
+                    ];
                     case 1:
                         // setup trie checkpointing
                         _a.sent();
-                        return [4 /*yield*/, _super.prototype.commit.call(this)];
+                        // setup cache checkpointing
+                        this._cache.commit();
+                        this._touchedStack.pop();
+                        this._checkpointCount--;
+                        storageMap = this._accessedStorage.pop();
+                        if (storageMap) {
+                            this._accessedStorageMerge(this._accessedStorage, storageMap);
+                        }
+                        if (!(this._checkpointCount === 0)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this._cache.flush()];
                     case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        this._clearOriginalStorageCache();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -448,190 +595,44 @@ var DefaultStateManager = /** @class */ (function (_super) {
      */
     DefaultStateManager.prototype.revert = function () {
         return __awaiter(this, void 0, void 0, function () {
+            var lastItem, touched;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: 
                     // setup trie checkpointing
-                    return [4 /*yield*/, this._trie.revert()];
+                    return [4 /*yield*/, this._trie.revert()
+                        // setup cache checkpointing
+                    ];
                     case 1:
                         // setup trie checkpointing
                         _a.sent();
+                        // setup cache checkpointing
+                        this._cache.revert();
                         this._storageTries = {};
-                        return [4 /*yield*/, _super.prototype.revert.call(this)];
+                        lastItem = this._accessedStorage.pop();
+                        if (lastItem) {
+                            this._accessedStorageReverted.push(lastItem);
+                        }
+                        touched = this._touchedStack.pop();
+                        if (!touched) {
+                            throw new Error('Reverting to invalid state checkpoint failed');
+                        }
+                        // Exceptional case due to consensus issue in Geth and Parity.
+                        // See [EIP issue #716](https://github.com/ethereum/EIPs/issues/716) for context.
+                        // The RIPEMD precompile has to remain *touched* even when the call reverts,
+                        // and be considered for deletion.
+                        if (this._touched.has(precompiles_1.ripemdPrecompileAddress)) {
+                            touched.add(precompiles_1.ripemdPrecompileAddress);
+                        }
+                        this._touched = touched;
+                        this._checkpointCount--;
+                        if (!(this._checkpointCount === 0)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this._cache.flush()];
                     case 2:
                         _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    /**
-     * Get an EIP-1186 proof
-     * @param address address to get proof of
-     * @param storageSlots storage slots to get proof of
-     */
-    DefaultStateManager.prototype.getProof = function (address, storageSlots) {
-        if (storageSlots === void 0) { storageSlots = []; }
-        return __awaiter(this, void 0, void 0, function () {
-            var account, accountProof, storageProof, storageTrie, storageSlots_1, storageSlots_1_1, storageKey, proof, value, _a, proofItem, e_1_1, returnValue;
-            var e_1, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0: return [4 /*yield*/, this.getAccount(address)];
-                    case 1:
-                        account = _c.sent();
-                        return [4 /*yield*/, merkle_patricia_tree_1.SecureTrie.createProof(this._trie, address.buf)];
-                    case 2:
-                        accountProof = (_c.sent()).map(function (p) { return (0, ethereumjs_util_1.bufferToHex)(p); });
-                        storageProof = [];
-                        return [4 /*yield*/, this._getStorageTrie(address)];
-                    case 3:
-                        storageTrie = _c.sent();
-                        _c.label = 4;
-                    case 4:
-                        _c.trys.push([4, 10, 11, 12]);
-                        storageSlots_1 = __values(storageSlots), storageSlots_1_1 = storageSlots_1.next();
-                        _c.label = 5;
-                    case 5:
-                        if (!!storageSlots_1_1.done) return [3 /*break*/, 9];
-                        storageKey = storageSlots_1_1.value;
-                        return [4 /*yield*/, merkle_patricia_tree_1.SecureTrie.createProof(storageTrie, storageKey)];
-                    case 6:
-                        proof = (_c.sent()).map(function (p) { return (0, ethereumjs_util_1.bufferToHex)(p); });
-                        _a = ethereumjs_util_1.bufferToHex;
-                        return [4 /*yield*/, this.getContractStorage(address, storageKey)];
-                    case 7:
-                        value = _a.apply(void 0, [_c.sent()]);
-                        if (value === '0x') {
-                            value = '0x0';
-                        }
-                        proofItem = {
-                            key: (0, ethereumjs_util_1.bufferToHex)(storageKey),
-                            value: value,
-                            proof: proof,
-                        };
-                        storageProof.push(proofItem);
-                        _c.label = 8;
-                    case 8:
-                        storageSlots_1_1 = storageSlots_1.next();
-                        return [3 /*break*/, 5];
-                    case 9: return [3 /*break*/, 12];
-                    case 10:
-                        e_1_1 = _c.sent();
-                        e_1 = { error: e_1_1 };
-                        return [3 /*break*/, 12];
-                    case 11:
-                        try {
-                            if (storageSlots_1_1 && !storageSlots_1_1.done && (_b = storageSlots_1.return)) _b.call(storageSlots_1);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                        return [7 /*endfinally*/];
-                    case 12:
-                        returnValue = {
-                            address: address.toString(),
-                            balance: (0, ethereumjs_util_1.bnToHex)(account.balance),
-                            codeHash: (0, ethereumjs_util_1.bufferToHex)(account.codeHash),
-                            nonce: (0, ethereumjs_util_1.bnToHex)(account.nonce),
-                            storageHash: (0, ethereumjs_util_1.bufferToHex)(account.stateRoot),
-                            accountProof: accountProof,
-                            storageProof: storageProof,
-                        };
-                        return [2 /*return*/, returnValue];
-                }
-            });
-        });
-    };
-    /**
-     * Verify an EIP-1186 proof. Throws if proof is invalid, otherwise returns true.
-     * @param proof the proof to prove
-     */
-    DefaultStateManager.prototype.verifyProof = function (proof) {
-        return __awaiter(this, void 0, void 0, function () {
-            var rootHash, key, accountProof, value, emptyBuffer, notEmptyErrorMsg, nonce, balance, storageHash, codeHash, account, nonce, balance, stateRoot, codeHash, invalidErrorMsg, storageRoot, _a, _b, stProof, storageProof, storageValue, storageKey, proofValue, reportedValue, e_2_1;
-            var e_2, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        rootHash = (0, ethereumjs_util_1.keccak256)((0, ethereumjs_util_1.toBuffer)(proof.accountProof[0]));
-                        key = (0, ethereumjs_util_1.toBuffer)(proof.address);
-                        accountProof = proof.accountProof.map(function (rlpString) {
-                            return (0, ethereumjs_util_1.toBuffer)(rlpString);
-                        });
-                        return [4 /*yield*/, merkle_patricia_tree_1.SecureTrie.verifyProof(rootHash, key, accountProof)];
-                    case 1:
-                        value = _d.sent();
-                        if (value === null) {
-                            emptyBuffer = Buffer.from('');
-                            notEmptyErrorMsg = 'Invalid proof provided: account is not empty';
-                            nonce = (0, ethereumjs_util_1.unpadBuffer)((0, ethereumjs_util_1.toBuffer)(proof.nonce));
-                            if (!nonce.equals(emptyBuffer)) {
-                                throw new Error("".concat(notEmptyErrorMsg, " (nonce is not zero)"));
-                            }
-                            balance = (0, ethereumjs_util_1.unpadBuffer)((0, ethereumjs_util_1.toBuffer)(proof.balance));
-                            if (!balance.equals(emptyBuffer)) {
-                                throw new Error("".concat(notEmptyErrorMsg, " (balance is not zero)"));
-                            }
-                            storageHash = (0, ethereumjs_util_1.toBuffer)(proof.storageHash);
-                            if (!storageHash.equals(ethereumjs_util_1.KECCAK256_RLP)) {
-                                throw new Error("".concat(notEmptyErrorMsg, " (storageHash does not equal KECCAK256_RLP)"));
-                            }
-                            codeHash = (0, ethereumjs_util_1.toBuffer)(proof.codeHash);
-                            if (!codeHash.equals(ethereumjs_util_1.KECCAK256_NULL)) {
-                                throw new Error("".concat(notEmptyErrorMsg, " (codeHash does not equal KECCAK256_NULL)"));
-                            }
-                        }
-                        else {
-                            account = ethereumjs_util_1.Account.fromRlpSerializedAccount(value);
-                            nonce = account.nonce, balance = account.balance, stateRoot = account.stateRoot, codeHash = account.codeHash;
-                            invalidErrorMsg = 'Invalid proof provided:';
-                            if (!nonce.eq(new ethereumjs_util_1.BN((0, ethereumjs_util_1.toBuffer)(proof.nonce)))) {
-                                throw new Error("".concat(invalidErrorMsg, " nonce does not match"));
-                            }
-                            if (!balance.eq(new ethereumjs_util_1.BN((0, ethereumjs_util_1.toBuffer)(proof.balance)))) {
-                                throw new Error("".concat(invalidErrorMsg, " balance does not match"));
-                            }
-                            if (!stateRoot.equals((0, ethereumjs_util_1.toBuffer)(proof.storageHash))) {
-                                throw new Error("".concat(invalidErrorMsg, " storageHash does not match"));
-                            }
-                            if (!codeHash.equals((0, ethereumjs_util_1.toBuffer)(proof.codeHash))) {
-                                throw new Error("".concat(invalidErrorMsg, " codeHash does not match"));
-                            }
-                        }
-                        storageRoot = (0, ethereumjs_util_1.toBuffer)(proof.storageHash);
-                        _d.label = 2;
-                    case 2:
-                        _d.trys.push([2, 7, 8, 9]);
-                        _a = __values(proof.storageProof), _b = _a.next();
-                        _d.label = 3;
-                    case 3:
-                        if (!!_b.done) return [3 /*break*/, 6];
-                        stProof = _b.value;
-                        storageProof = stProof.proof.map(function (value) { return (0, ethereumjs_util_1.toBuffer)(value); });
-                        storageValue = (0, ethereumjs_util_1.setLengthLeft)((0, ethereumjs_util_1.toBuffer)(stProof.value), 32);
-                        storageKey = (0, ethereumjs_util_1.toBuffer)(stProof.key);
-                        return [4 /*yield*/, merkle_patricia_tree_1.SecureTrie.verifyProof(storageRoot, storageKey, storageProof)];
-                    case 4:
-                        proofValue = _d.sent();
-                        reportedValue = (0, ethereumjs_util_1.setLengthLeft)(ethereumjs_util_1.rlp.decode(proofValue), 32);
-                        if (!reportedValue.equals(storageValue)) {
-                            throw new Error('Reported trie value does not match storage');
-                        }
-                        _d.label = 5;
-                    case 5:
-                        _b = _a.next();
-                        return [3 /*break*/, 3];
-                    case 6: return [3 /*break*/, 9];
-                    case 7:
-                        e_2_1 = _d.sent();
-                        e_2 = { error: e_2_1 };
-                        return [3 /*break*/, 9];
-                    case 8:
-                        try {
-                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-                        }
-                        finally { if (e_2) throw e_2.error; }
-                        return [7 /*endfinally*/];
-                    case 9: return [2 /*return*/, true];
+                        this._clearOriginalStorageCache();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -742,6 +743,144 @@ var DefaultStateManager = /** @class */ (function (_super) {
         });
     };
     /**
+     * Generates a canonical genesis state on the instance based on the
+     * configured chain parameters. Will error if there are uncommitted
+     * checkpoints on the instance.
+     */
+    DefaultStateManager.prototype.generateCanonicalGenesis = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var genesis;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (this._checkpointCount !== 0) {
+                            throw new Error('Cannot create genesis state with uncommitted checkpoints');
+                        }
+                        return [4 /*yield*/, this.hasGenesisState()];
+                    case 1:
+                        genesis = _a.sent();
+                        if (!!genesis) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.generateGenesis(this._common.genesisState())];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Initializes the provided genesis state into the state trie
+     * @param initState address -> balance | [balance, code, storage]
+     */
+    DefaultStateManager.prototype.generateGenesis = function (initState) {
+        return __awaiter(this, void 0, void 0, function () {
+            var addresses, addresses_1, addresses_1_1, address, addr, state, account, _a, balance, code, storage, account, _b, _c, _d, key, value, e_1_1, e_2_1;
+            var e_2, _e, e_1, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
+                    case 0:
+                        if (this._checkpointCount !== 0) {
+                            throw new Error('Cannot create genesis state with uncommitted checkpoints');
+                        }
+                        if (this.DEBUG) {
+                            debug("Save genesis state into the state trie");
+                        }
+                        addresses = Object.keys(initState);
+                        _g.label = 1;
+                    case 1:
+                        _g.trys.push([1, 17, 18, 19]);
+                        addresses_1 = __values(addresses), addresses_1_1 = addresses_1.next();
+                        _g.label = 2;
+                    case 2:
+                        if (!!addresses_1_1.done) return [3 /*break*/, 16];
+                        address = addresses_1_1.value;
+                        addr = ethereumjs_util_1.Address.fromString(address);
+                        state = initState[address];
+                        if (!!Array.isArray(state)) return [3 /*break*/, 4];
+                        account = ethereumjs_util_1.Account.fromAccountData({ balance: state });
+                        return [4 /*yield*/, this._trie.put(addr.buf, account.serialize())];
+                    case 3:
+                        _g.sent();
+                        return [3 /*break*/, 15];
+                    case 4:
+                        _a = __read(state, 3), balance = _a[0], code = _a[1], storage = _a[2];
+                        account = ethereumjs_util_1.Account.fromAccountData({ balance: balance });
+                        return [4 /*yield*/, this._trie.put(addr.buf, account.serialize())];
+                    case 5:
+                        _g.sent();
+                        if (!code) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.putContractCode(addr, (0, ethereumjs_util_1.toBuffer)(code))];
+                    case 6:
+                        _g.sent();
+                        _g.label = 7;
+                    case 7:
+                        if (!storage) return [3 /*break*/, 15];
+                        _g.label = 8;
+                    case 8:
+                        _g.trys.push([8, 13, 14, 15]);
+                        _b = (e_1 = void 0, __values(Object.values(storage))), _c = _b.next();
+                        _g.label = 9;
+                    case 9:
+                        if (!!_c.done) return [3 /*break*/, 12];
+                        _d = __read(_c.value, 2), key = _d[0], value = _d[1];
+                        return [4 /*yield*/, this.putContractStorage(addr, (0, ethereumjs_util_1.toBuffer)(key), (0, ethereumjs_util_1.toBuffer)(value))];
+                    case 10:
+                        _g.sent();
+                        _g.label = 11;
+                    case 11:
+                        _c = _b.next();
+                        return [3 /*break*/, 9];
+                    case 12: return [3 /*break*/, 15];
+                    case 13:
+                        e_1_1 = _g.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 15];
+                    case 14:
+                        try {
+                            if (_c && !_c.done && (_f = _b.return)) _f.call(_b);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 15:
+                        addresses_1_1 = addresses_1.next();
+                        return [3 /*break*/, 2];
+                    case 16: return [3 /*break*/, 19];
+                    case 17:
+                        e_2_1 = _g.sent();
+                        e_2 = { error: e_2_1 };
+                        return [3 /*break*/, 19];
+                    case 18:
+                        try {
+                            if (addresses_1_1 && !addresses_1_1.done && (_e = addresses_1.return)) _e.call(addresses_1);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                        return [7 /*endfinally*/];
+                    case 19: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Checks if the `account` corresponding to `address`
+     * is empty or non-existent as defined in
+     * EIP-161 (https://eips.ethereum.org/EIPS/eip-161).
+     * @param address - Address to check
+     */
+    DefaultStateManager.prototype.accountIsEmpty = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            var account;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getAccount(address)];
+                    case 1:
+                        account = _a.sent();
+                        return [2 /*return*/, account.isEmpty()];
+                }
+            });
+        });
+    };
+    /**
      * Checks if the `account` corresponding to `address`
      * exists
      * @param address - Address of the `account` to check
@@ -756,7 +895,7 @@ var DefaultStateManager = /** @class */ (function (_super) {
                         if (account && !account.virtual && !this._cache.keyIsDeleted(address)) {
                             return [2 /*return*/, true];
                         }
-                        return [4 /*yield*/, this._trie.get(address.buf)];
+                        return [4 /*yield*/, this._cache._trie.get(address.buf)];
                     case 1:
                         if (_a.sent()) {
                             return [2 /*return*/, true];
@@ -766,7 +905,177 @@ var DefaultStateManager = /** @class */ (function (_super) {
             });
         });
     };
+    /** EIP-2929 logic
+     * This should only be called from within the EVM
+     */
+    /**
+     * Returns true if the address is warm in the current context
+     * @param address - The address (as a Buffer) to check
+     */
+    DefaultStateManager.prototype.isWarmedAddress = function (address) {
+        for (var i = this._accessedStorage.length - 1; i >= 0; i--) {
+            var currentMap = this._accessedStorage[i];
+            if (currentMap.has(address.toString('hex'))) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Add a warm address in the current context
+     * @param address - The address (as a Buffer) to check
+     */
+    DefaultStateManager.prototype.addWarmedAddress = function (address) {
+        var key = address.toString('hex');
+        var storageSet = this._accessedStorage[this._accessedStorage.length - 1].get(key);
+        if (!storageSet) {
+            var emptyStorage = new Set();
+            this._accessedStorage[this._accessedStorage.length - 1].set(key, emptyStorage);
+        }
+    };
+    /**
+     * Returns true if the slot of the address is warm
+     * @param address - The address (as a Buffer) to check
+     * @param slot - The slot (as a Buffer) to check
+     */
+    DefaultStateManager.prototype.isWarmedStorage = function (address, slot) {
+        var addressKey = address.toString('hex');
+        var storageKey = slot.toString('hex');
+        for (var i = this._accessedStorage.length - 1; i >= 0; i--) {
+            var currentMap = this._accessedStorage[i];
+            if (currentMap.has(addressKey) && currentMap.get(addressKey).has(storageKey)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Mark the storage slot in the address as warm in the current context
+     * @param address - The address (as a Buffer) to check
+     * @param slot - The slot (as a Buffer) to check
+     */
+    DefaultStateManager.prototype.addWarmedStorage = function (address, slot) {
+        var addressKey = address.toString('hex');
+        var storageSet = this._accessedStorage[this._accessedStorage.length - 1].get(addressKey);
+        if (!storageSet) {
+            storageSet = new Set();
+            this._accessedStorage[this._accessedStorage.length - 1].set(addressKey, storageSet);
+        }
+        storageSet.add(slot.toString('hex'));
+    };
+    /**
+     * Clear the warm accounts and storage. To be called after a transaction finished.
+     * @param boolean - If true, returns an EIP-2930 access list generated
+     */
+    DefaultStateManager.prototype.clearWarmedAccounts = function () {
+        this._accessedStorage = [new Map()];
+        this._accessedStorageReverted = [new Map()];
+    };
+    /**
+     * Generates an EIP-2930 access list
+     *
+     * Note: this method is not yet part of the {@link StateManager} interface.
+     * If not implemented, {@link VM.runTx} is not allowed to be used with the
+     * `reportAccessList` option and will instead throw.
+     *
+     * Note: there is an edge case on accessList generation where an
+     * internal call might revert without an accessList but pass if the
+     * accessList is used for a tx run (so the subsequent behavior might change).
+     * This edge case is not covered by this implementation.
+     *
+     * @param addressesRemoved - List of addresses to be removed from the final list
+     * @param addressesOnlyStorage - List of addresses only to be added in case of present storage slots
+     *
+     * @returns - an [@ethereumjs/tx](https://github.com/ethereumjs/ethereumjs-monorepo/packages/tx) `AccessList`
+     */
+    DefaultStateManager.prototype.generateAccessList = function (addressesRemoved, addressesOnlyStorage) {
+        var _this = this;
+        if (addressesRemoved === void 0) { addressesRemoved = []; }
+        if (addressesOnlyStorage === void 0) { addressesOnlyStorage = []; }
+        // Merge with the reverted storage list
+        var mergedStorage = __spreadArray(__spreadArray([], __read(this._accessedStorage), false), __read(this._accessedStorageReverted), false);
+        // Fold merged storage array into one Map
+        while (mergedStorage.length >= 2) {
+            var storageMap = mergedStorage.pop();
+            if (storageMap) {
+                this._accessedStorageMerge(mergedStorage, storageMap);
+            }
+        }
+        var folded = new Map(__spreadArray([], __read(mergedStorage[0].entries()), false).sort());
+        // Transfer folded map to final structure
+        var accessList = [];
+        folded.forEach(function (slots, addressStr) {
+            var address = ethereumjs_util_1.Address.fromString("0x" + addressStr);
+            var check1 = (0, precompiles_1.getActivePrecompiles)(_this._common).find(function (a) { return a.equals(address); });
+            var check2 = addressesRemoved.find(function (a) { return a.equals(address); });
+            var check3 = addressesOnlyStorage.find(function (a) { return a.equals(address); }) !== undefined && slots.size === 0;
+            if (!check1 && !check2 && !check3) {
+                var storageSlots = Array.from(slots)
+                    .map(function (s) { return "0x" + s; })
+                    .sort();
+                var accessListItem = {
+                    address: "0x" + addressStr,
+                    storageKeys: storageSlots,
+                };
+                accessList.push(accessListItem);
+            }
+        });
+        return accessList;
+    };
+    /**
+     * Removes accounts form the state trie that have been touched,
+     * as defined in EIP-161 (https://eips.ethereum.org/EIPS/eip-161).
+     */
+    DefaultStateManager.prototype.cleanupTouchedAccounts = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var touchedArray, touchedArray_1, touchedArray_1_1, addressHex, address, empty, e_3_1;
+            var e_3, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!this._common.gteHardfork('spuriousDragon')) return [3 /*break*/, 8];
+                        touchedArray = Array.from(this._touched);
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 6, 7, 8]);
+                        touchedArray_1 = __values(touchedArray), touchedArray_1_1 = touchedArray_1.next();
+                        _b.label = 2;
+                    case 2:
+                        if (!!touchedArray_1_1.done) return [3 /*break*/, 5];
+                        addressHex = touchedArray_1_1.value;
+                        address = new ethereumjs_util_1.Address(Buffer.from(addressHex, 'hex'));
+                        return [4 /*yield*/, this.accountIsEmpty(address)];
+                    case 3:
+                        empty = _b.sent();
+                        if (empty) {
+                            this._cache.del(address);
+                            if (this.DEBUG) {
+                                debug("Cleanup touched account address=" + address + " (>= SpuriousDragon)");
+                            }
+                        }
+                        _b.label = 4;
+                    case 4:
+                        touchedArray_1_1 = touchedArray_1.next();
+                        return [3 /*break*/, 2];
+                    case 5: return [3 /*break*/, 8];
+                    case 6:
+                        e_3_1 = _b.sent();
+                        e_3 = { error: e_3_1 };
+                        return [3 /*break*/, 8];
+                    case 7:
+                        try {
+                            if (touchedArray_1_1 && !touchedArray_1_1.done && (_a = touchedArray_1.return)) _a.call(touchedArray_1);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                        return [7 /*endfinally*/];
+                    case 8:
+                        this._touched.clear();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     return DefaultStateManager;
-}(_1.BaseStateManager));
+}());
 exports.default = DefaultStateManager;
 //# sourceMappingURL=stateManager.js.map

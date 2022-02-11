@@ -68,13 +68,11 @@ class EVM {
      * if an exception happens during the message execution.
      */
     async executeMessage(message) {
-        var _a;
         await this._vm._emit('beforeMessage', message);
         if (!message.to && this._vm._common.isActivatedEIP(2929)) {
             message.code = message.data;
             this._state.addWarmedAddress((await this._generateAddress(message)).buf);
         }
-        const oldRefund = this._refund.clone();
         await this._state.checkpoint();
         if (this._vm.DEBUG) {
             debug('-'.repeat(100));
@@ -82,8 +80,7 @@ class EVM {
         }
         let result;
         if (this._vm.DEBUG) {
-            const { caller, gasLimit, to, value, delegatecall } = message;
-            debug(`New message caller=${caller} gasLimit=${gasLimit} to=${(_a = to === null || to === void 0 ? void 0 : to.toString()) !== null && _a !== void 0 ? _a : 'none'} value=${value} delegatecall=${delegatecall ? 'yes' : 'no'}`);
+            debug(`New message caller=${message.caller} gasLimit=${message.gasLimit} to=${message.to ? message.to.toString() : ''} value=${message.value} delegatecall=${message.delegatecall ? 'yes' : 'no'}`);
         }
         if (message.to) {
             if (this._vm.DEBUG) {
@@ -98,19 +95,12 @@ class EVM {
             result = await this._executeCreate(message);
         }
         if (this._vm.DEBUG) {
-            const { gasUsed, exceptionError, returnValue, gasRefund } = result.execResult;
-            debug(`Received message execResult: [ gasUsed=${gasUsed} exceptionError=${exceptionError ? `'${exceptionError.error}'` : 'none'} returnValue=0x${(0, util_1.short)(returnValue)} gasRefund=${gasRefund !== null && gasRefund !== void 0 ? gasRefund : 0} ]`);
+            debug(`Received message results gasUsed=${result.gasUsed} execResult: [ gasUsed=${result.gasUsed} exceptionError=${result.execResult.exceptionError ? result.execResult.exceptionError.toString() : ''} returnValue=${(0, util_1.short)(result.execResult.returnValue)} gasRefund=${result.execResult.gasRefund} ]`);
         }
-        const err = result.execResult.exceptionError;
-        // This clause captures any error which happened during execution
-        // If that is the case, then set the _refund tracker to the old refund value
-        if (err) {
-            // TODO: Move `gasRefund` to a tx-level result object
-            // instead of `ExecResult`.
-            this._refund = oldRefund;
-            result.execResult.selfdestruct = {};
-        }
+        // TODO: Move `gasRefund` to a tx-level result object
+        // instead of `ExecResult`.
         result.execResult.gasRefund = this._refund.clone();
+        const err = result.execResult.exceptionError;
         if (err) {
             if (this._vm._common.gteHardfork('homestead') || err.error != exceptions_1.ERROR.CODESTORE_OUT_OF_GAS) {
                 result.execResult.logs = [];
@@ -167,7 +157,7 @@ class EVM {
         if (errorMessage) {
             exit = true;
             if (this._vm.DEBUG) {
-                debug(`Exit early on value transfer overflowed`);
+                debug(`Exit early on value tranfer overflowed`);
             }
         }
         if (exit) {
@@ -253,7 +243,7 @@ class EVM {
         if (errorMessage) {
             exit = true;
             if (this._vm.DEBUG) {
-                debug(`Exit early on value transfer overflowed`);
+                debug(`Exit early on value tranfer overflowed`);
             }
         }
         if (exit) {
@@ -283,8 +273,7 @@ class EVM {
         }
         // Check for SpuriousDragon EIP-170 code size limit
         let allowedCodeSize = true;
-        if (!result.exceptionError &&
-            this._vm._common.gteHardfork('spuriousDragon') &&
+        if (this._vm._common.gteHardfork('spuriousDragon') &&
             result.returnValue.length > this._vm._common.param('vm', 'maxCodeSize')) {
             allowedCodeSize = false;
         }
@@ -371,6 +360,7 @@ class EVM {
         if (message.selfdestruct) {
             eei._result.selfdestruct = message.selfdestruct;
         }
+        const oldRefund = this._refund.clone();
         const interpreter = new interpreter_1.default(this._vm, eei);
         const interpreterRes = await interpreter.run(message.code, opts);
         let result = eei._result;
@@ -381,6 +371,8 @@ class EVM {
             }
             // Clear the result on error
             result = Object.assign(Object.assign({}, result), { logs: [], selfdestruct: {} });
+            // Revert gas refund if message failed
+            this._refund = oldRefund;
         }
         return Object.assign(Object.assign({}, result), { runState: Object.assign(Object.assign(Object.assign({}, interpreterRes.runState), result), eei._env), exceptionError: interpreterRes.exceptionError, gas: eei._gasLeft, gasUsed, returnValue: result.returnValue ? result.returnValue : Buffer.alloc(0) });
     }

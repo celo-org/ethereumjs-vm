@@ -145,11 +145,11 @@ function runBlock(opts) {
                     }
                     if (this.DEBUG) {
                         debug('-'.repeat(100));
-                        debug("Running block hash=".concat(block.hash().toString('hex'), " number=").concat(block.header.number, " hardfork=").concat(this._common.hardfork()));
+                        debug("Running block hash=" + block.hash().toString('hex') + " number=" + block.header.number + " hardfork=" + this._common.hardfork());
                     }
                     if (!root) return [3 /*break*/, 3];
                     if (this.DEBUG) {
-                        debug("Set provided state root ".concat(root.toString('hex')));
+                        debug("Set provided state root " + root.toString('hex'));
                     }
                     return [4 /*yield*/, state.setStateRoot(root)];
                 case 2:
@@ -181,7 +181,7 @@ function runBlock(opts) {
                 case 8:
                     result = _a.sent();
                     if (this.DEBUG) {
-                        debug("Received block results gasUsed=".concat(result.gasUsed, " bloom=").concat((0, opcodes_1.short)(result.bloom.bitvector), " (").concat(result.bloom.bitvector.length, " bytes) receiptRoot=").concat(result.receiptRoot.toString('hex'), " receipts=").concat(result.receipts.length, " txResults=").concat(result.results.length));
+                        debug("Received block results gasUsed=" + result.gasUsed + " bloom=" + (0, opcodes_1.short)(result.bloom.bitvector) + " (" + result.bloom.bitvector.length + " bytes) receiptRoot=" + result.receiptRoot.toString('hex') + " receipts=" + result.receipts.length + " txResults=" + result.results.length);
                     }
                     return [3 /*break*/, 11];
                 case 9:
@@ -223,28 +223,28 @@ function runBlock(opts) {
                 case 15:
                     if (result.receiptRoot && !result.receiptRoot.equals(block.header.receiptTrie)) {
                         if (this.DEBUG) {
-                            debug("Invalid receiptTrie received=".concat(result.receiptRoot.toString('hex'), " expected=").concat(block.header.receiptTrie.toString('hex')));
+                            debug("Invalid receiptTrie received=" + result.receiptRoot.toString('hex') + " expected=" + block.header.receiptTrie.toString('hex'));
                         }
                         msg = _errorMsg('invalid receiptTrie', this, block);
                         throw new Error(msg);
                     }
                     if (!result.bloom.bitvector.equals(block.header.logsBloom)) {
                         if (this.DEBUG) {
-                            debug("Invalid bloom received=".concat(result.bloom.bitvector.toString('hex'), " expected=").concat(block.header.logsBloom.toString('hex')));
+                            debug("Invalid bloom received=" + result.bloom.bitvector.toString('hex') + " expected=" + block.header.logsBloom.toString('hex'));
                         }
                         msg = _errorMsg('invalid bloom', this, block);
                         throw new Error(msg);
                     }
                     if (!result.gasUsed.eq(block.header.gasUsed)) {
                         if (this.DEBUG) {
-                            debug("Invalid gasUsed received=".concat(result.gasUsed, " expected=").concat(block.header.gasUsed));
+                            debug("Invalid gasUsed received=" + result.gasUsed + " expected=" + block.header.gasUsed);
                         }
                         msg = _errorMsg('invalid gasUsed', this, block);
                         throw new Error(msg);
                     }
                     if (!stateRoot.equals(block.header.stateRoot)) {
                         if (this.DEBUG) {
-                            debug("Invalid stateRoot received=".concat(stateRoot.toString('hex'), " expected=").concat(block.header.stateRoot.toString('hex')));
+                            debug("Invalid stateRoot received=" + stateRoot.toString('hex') + " expected=" + block.header.stateRoot.toString('hex'));
                         }
                         msg = _errorMsg('invalid block stateRoot', this, block);
                         throw new Error(msg);
@@ -278,7 +278,7 @@ function runBlock(opts) {
                      */
                     _a.sent();
                     if (this.DEBUG) {
-                        debug("Running block finished hash=".concat(block.hash().toString('hex'), " number=").concat(block.header.number, " hardfork=").concat(this._common.hardfork()));
+                        debug("Running block finished hash=" + block.hash().toString('hex') + " number=" + block.header.number + " hardfork=" + this._common.hardfork());
                     }
                     return [2 /*return*/, results];
             }
@@ -384,7 +384,7 @@ function applyTransactions(block, opts) {
                     // Add to total block gas usage
                     gasUsed = gasUsed.add(txRes.gasUsed);
                     if (this.DEBUG) {
-                        debug("Add tx gas used (".concat(txRes.gasUsed, ") to total block gas usage (-> ").concat(gasUsed, ")"));
+                        debug("Add tx gas used (" + txRes.gasUsed + ") to total block gas usage (-> " + gasUsed + ")");
                     }
                     // Combine blooms via bitwise OR
                     bloom.or(txRes.bloom);
@@ -439,7 +439,7 @@ function assignBlockRewards(block) {
                 case 3:
                     account_1 = _b.sent();
                     if (this.DEBUG) {
-                        debug("Add uncle reward ".concat(reward_1, " to account ").concat(ommer.coinbase, " (-> ").concat(account_1.balance, ")"));
+                        debug("Add uncle reward " + reward_1 + " to account " + ommer.coinbase + " (-> " + account_1.balance + ")");
                     }
                     _b.label = 4;
                 case 4:
@@ -462,7 +462,7 @@ function assignBlockRewards(block) {
                 case 9:
                     account = _b.sent();
                     if (this.DEBUG) {
-                        debug("Add miner reward ".concat(reward, " to account ").concat(block.header.coinbase, " (-> ").concat(account.balance, ")"));
+                        debug("Add miner reward " + reward + " to account " + block.header.coinbase + " (-> " + account.balance + ")");
                     }
                     return [2 /*return*/];
             }
@@ -507,13 +507,7 @@ exports.rewardAccount = rewardAccount;
  * Returns the encoded tx receipt.
  */
 function encodeReceipt(tx, receipt) {
-    var _a;
-    var encoded = ethereumjs_util_1.rlp.encode([
-        (_a = receipt.stateRoot) !== null && _a !== void 0 ? _a : receipt.status,
-        receipt.gasUsed,
-        receipt.bitvector,
-        receipt.logs,
-    ]);
+    var encoded = ethereumjs_util_1.rlp.encode(Object.values(receipt));
     if (!tx.supports(tx_1.Capability.EIP2718TypedTransaction)) {
         return encoded;
     }
@@ -537,19 +531,19 @@ function generateTxReceipt(tx, txRes, blockGasUsed) {
                         bitvector: txRes.bloom.bitvector,
                         logs: (_a = txRes.execResult.logs) !== null && _a !== void 0 ? _a : [],
                     };
-                    receiptLog = "Generate tx receipt transactionType=".concat(tx.type, " gasUsed=").concat(blockGasUsed, " bitvector=").concat((0, opcodes_1.short)(abstractTxReceipt.bitvector), " (").concat(abstractTxReceipt.bitvector.length, " bytes) logs=").concat(abstractTxReceipt.logs.length);
+                    receiptLog = "Generate tx receipt transactionType=" + tx.type + " gasUsed=" + blockGasUsed + " bitvector=" + (0, opcodes_1.short)(abstractTxReceipt.bitvector) + " (" + abstractTxReceipt.bitvector.length + " bytes) logs=" + abstractTxReceipt.logs.length;
                     if (!!tx.supports(999)) return [3 /*break*/, 4];
                     if (!this._common.gteHardfork('byzantium')) return [3 /*break*/, 1];
                     // Post-Byzantium
                     txReceipt = __assign({ status: txRes.execResult.exceptionError ? 0 : 1 }, abstractTxReceipt);
                     statusInfo = txRes.execResult.exceptionError ? 'error' : 'ok';
-                    receiptLog += " status=".concat(txReceipt.status, " (").concat(statusInfo, ") (>= Byzantium)");
+                    receiptLog += " status=" + txReceipt.status + " (" + statusInfo + ") (>= Byzantium)";
                     return [3 /*break*/, 3];
                 case 1: return [4 /*yield*/, this.stateManager.getStateRoot(true)];
                 case 2:
                     stateRoot = _b.sent();
                     txReceipt = __assign({ stateRoot: stateRoot }, abstractTxReceipt);
-                    receiptLog += " stateRoot=".concat(txReceipt.stateRoot.toString('hex'), " (< Byzantium)");
+                    receiptLog += " stateRoot=" + txReceipt.stateRoot.toString('hex') + " (< Byzantium)";
                     _b.label = 3;
                 case 3:
                     encodedReceipt = ethereumjs_util_1.rlp.encode(Object.values(txReceipt));
@@ -677,7 +671,7 @@ function _genTxTrie(block) {
  */
 function _errorMsg(msg, vm, block) {
     var blockErrorStr = 'errorStr' in block ? block.errorStr() : 'block';
-    var errorMsg = "".concat(msg, " (").concat(vm.errorStr(), " -> ").concat(blockErrorStr, ")");
+    var errorMsg = msg + " (" + vm.errorStr() + " -> " + blockErrorStr + ")";
     return errorMsg;
 }
 //# sourceMappingURL=runBlock.js.map

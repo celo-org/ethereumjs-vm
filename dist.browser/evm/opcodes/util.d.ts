@@ -59,7 +59,7 @@ export declare function getDataSlice(data: Buffer, offset: BN, length: BN): Buff
  */
 export declare function getFullname(code: number, name: string): string;
 /**
- * Checks if a jump is valid given a destination (defined as a 1 in the validJumps array)
+ * Checks if a jump is valid given a destination
  *
  * @param  {RunState} runState
  * @param  {number}   dest
@@ -67,7 +67,7 @@ export declare function getFullname(code: number, name: string): string;
  */
 export declare function jumpIsValid(runState: RunState, dest: number): boolean;
 /**
- * Checks if a jumpsub is valid given a destination (defined as a 2 in the validJumps array)
+ * Checks if a jumpsub is valid given a destination
  *
  * @param  {RunState} runState
  * @param  {number}   dest
@@ -92,7 +92,7 @@ export declare function maxCallGas(gasLimit: BN, gasLeft: BN, runState: RunState
  * @param {BN} offset
  * @param {BN} length
  */
-export declare function subMemUsage(runState: RunState, offset: BN, length: BN, common: Common): BN;
+export declare function subMemUsage(runState: RunState, offset: BN, length: BN, common: Common): void;
 /**
  * Writes data returned by eei.call* methods to memory
  *
@@ -107,4 +107,4 @@ export declare function writeCallOutput(runState: RunState, outOffset: BN, outLe
  * @param {Buffer}   value
  * @param {Buffer}   keyBuf
  */
-export declare function updateSstoreGas(runState: RunState, currentStorage: Buffer, value: Buffer, common: Common): BN;
+export declare function updateSstoreGas(runState: RunState, currentStorage: Buffer, value: Buffer, keyBuf: Buffer, common: Common): void;

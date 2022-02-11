@@ -17,12 +17,6 @@ export default class Stack {
      */
     popN(num?: number): BN[];
     /**
-     * Return items from the stack
-     * @param num Number of items to return
-     * @throws {@link ERROR.STACK_UNDERFLOW}
-     */
-    peek(num?: number): BN[];
-    /**
      * Swap top of stack with an item in the stack.
      * @param position - Index of item from top of the stack (0-indexed)
      */

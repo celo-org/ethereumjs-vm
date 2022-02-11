@@ -1,7 +1,6 @@
 /// <reference types="node" />
 import { Account, Address } from 'ethereumjs-util';
 import { AccessList } from '@ethereumjs/tx';
-import { Proof } from './stateManager';
 /**
  * Storage values of an account
  */
@@ -33,8 +32,6 @@ export interface StateManager {
     accountExists(address: Address): Promise<boolean>;
     cleanupTouchedAccounts(): Promise<void>;
     clearOriginalStorageCache(): void;
-    getProof?(address: Address, storageSlots: Buffer[]): Promise<Proof>;
-    verifyProof?(proof: Proof): Promise<boolean>;
 }
 export interface EIP2929StateManager extends StateManager {
     addWarmedAddress(address: Buffer): void;

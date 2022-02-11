@@ -14,21 +14,22 @@ var ethereumjs_util_1 = require("ethereumjs-util");
 function updateSstoreGasEIP1283(runState, currentStorage, originalStorage, value, common) {
     if (currentStorage.equals(value)) {
         // If current value equals new value (this is a no-op), 200 gas is deducted.
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreNoopGas'));
+        runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreNoopGas')), 'EIP-1283 -> netSstoreNoopGas');
+        return;
     }
     // If current value does not equal new value
     if (originalStorage.equals(currentStorage)) {
         // If original value equals current value (this storage slot has not been changed by the current execution context)
         if (originalStorage.length === 0) {
             // If original value is 0, 20000 gas is deducted.
-            return new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreInitGas'));
+            return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreInitGas')), 'EIP-1283 -> netSstoreInitGas');
         }
         if (value.length === 0) {
             // If new value is 0, add 15000 gas to refund counter.
             runState.eei.refundGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreClearRefund')), 'EIP-1283 -> netSstoreClearRefund');
         }
         // Otherwise, 5000 gas is deducted.
-        return new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreCleanGas'));
+        return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreCleanGas')), 'EIP-1283 -> netSstoreCleanGas');
     }
     // If original value does not equal current value (this storage slot is dirty), 200 gas is deducted. Apply both of the following clauses.
     if (originalStorage.length !== 0) {
@@ -53,7 +54,7 @@ function updateSstoreGasEIP1283(runState, currentStorage, originalStorage, value
             runState.eei.refundGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreResetRefund')), 'EIP-1283 -> netSstoreResetRefund');
         }
     }
-    return new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreDirtyGas'));
+    return runState.eei.useGas(new ethereumjs_util_1.BN(common.param('gasPrices', 'netSstoreDirtyGas')), 'EIP-1283 -> netSstoreDirtyGas');
 }
 exports.updateSstoreGasEIP1283 = updateSstoreGasEIP1283;
 //# sourceMappingURL=EIP1283.js.map

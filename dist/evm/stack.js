@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const ethereumjs_util_1 = require("ethereumjs-util");
-const exceptions_1 = require("../exceptions");
+const { ERROR, VmError } = require('../exceptions');
 /**
  * Implementation of the stack used in evm.
  */
@@ -15,19 +15,19 @@ class Stack {
     }
     push(value) {
         if (!ethereumjs_util_1.BN.isBN(value)) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.INTERNAL_ERROR);
+            throw new VmError(ERROR.INTERNAL_ERROR);
         }
         if (value.gt(ethereumjs_util_1.MAX_INTEGER)) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.OUT_OF_RANGE);
+            throw new VmError(ERROR.OUT_OF_RANGE);
         }
         if (this._store.length >= this._maxHeight) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_OVERFLOW);
+            throw new VmError(ERROR.STACK_OVERFLOW);
         }
         this._store.push(value);
     }
     pop() {
         if (this._store.length < 1) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         // Length is checked above, so pop shouldn't return undefined
         return this._store.pop();
@@ -39,7 +39,7 @@ class Stack {
      */
     popN(num = 1) {
         if (this._store.length < num) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         if (num === 0) {
             return [];
@@ -47,28 +47,12 @@ class Stack {
         return this._store.splice(-1 * num).reverse();
     }
     /**
-     * Return items from the stack
-     * @param num Number of items to return
-     * @throws {@link ERROR.STACK_UNDERFLOW}
-     */
-    peek(num = 1) {
-        const peekArray = [];
-        for (let peek = 1; peek <= num; peek++) {
-            const index = this._store.length - peek;
-            if (index < 0) {
-                throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
-            }
-            peekArray.push(this._store[index]);
-        }
-        return peekArray;
-    }
-    /**
      * Swap top of stack with an item in the stack.
      * @param position - Index of item from top of the stack (0-indexed)
      */
     swap(position) {
         if (this._store.length <= position) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         const head = this._store.length - 1;
         const i = this._store.length - position - 1;
@@ -82,7 +66,7 @@ class Stack {
      */
     dup(position) {
         if (this._store.length < position) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         const i = this._store.length - position;
         this.push(this._store[i].clone());

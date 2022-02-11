@@ -174,10 +174,6 @@ export default class EEI {
      */
     getBlockDifficulty(): BN;
     /**
-     * Returns the block's random field.
-     */
-    getBlockRandom(): BN;
-    /**
      * Returns the block's gas limit.
      */
     getBlockGasLimit(): BN;

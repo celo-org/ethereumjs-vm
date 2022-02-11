@@ -106,8 +106,8 @@ async function runTx(opts) {
 }
 exports.default = runTx;
 async function _runTx(opts) {
-    var _a, _b, _c, _d;
-    // Have to cast as `EIP2929StateManager` to access the EIP2929 methods
+    var _a, _b, _c;
+    // Casted as `any` to access the EIP2929 methods
     const state = this.stateManager;
     const { tx, block } = opts;
     if (!block) {
@@ -159,11 +159,6 @@ async function _runTx(opts) {
     // Check from account's balance and nonce
     let fromAccount = await state.getAccount(caller);
     const { nonce, balance } = fromAccount;
-    // EIP-3607: Reject transactions from senders with deployed code
-    if (this._common.isActivatedEIP(3607) && !fromAccount.codeHash.equals(ethereumjs_util_1.KECCAK256_NULL)) {
-        const msg = _errorMsg('invalid sender address, address is not EOA (EIP-3607)', this, block, tx);
-        throw new Error(msg);
-    }
     if (!opts.skipBalance) {
         const cost = tx.getUpfrontCost(block.header.baseFeePerGas);
         if (balance.lt(cost)) {
@@ -225,13 +220,12 @@ async function _runTx(opts) {
     });
     const evm = new evm_1.default(this, txContext, block);
     if (this.DEBUG) {
-        debug(`Running tx=0x${tx.isSigned() ? tx.hash().toString('hex') : 'unsigned'} with caller=${caller} gasLimit=${gasLimit} to=${(_a = to === null || to === void 0 ? void 0 : to.toString()) !== null && _a !== void 0 ? _a : 'none'} value=${value} data=0x${(0, util_1.short)(data)}`);
+        debug(`Running tx=0x${tx.isSigned() ? tx.hash().toString('hex') : 'unsigned'} with caller=${caller} gasLimit=${gasLimit} to=${to ? to.toString() : ''} value=${value} data=0x${(0, util_1.short)(data)}`);
     }
     const results = (await evm.executeMessage(message));
     if (this.DEBUG) {
-        const { gasUsed, exceptionError, returnValue, gasRefund } = results.execResult;
         debug('-'.repeat(100));
-        debug(`Received tx execResult: [ gasUsed=${gasUsed} exceptionError=${exceptionError ? `'${exceptionError.error}'` : 'none'} returnValue=0x${(0, util_1.short)(returnValue)} gasRefund=${gasRefund !== null && gasRefund !== void 0 ? gasRefund : 0} ]`);
+        debug(`Received tx results gasUsed=${results.gasUsed} execResult: [ gasUsed=${results.gasUsed} exceptionError=${results.execResult.exceptionError ? results.execResult.exceptionError.error : ''} returnValue=${(0, util_1.short)(results.execResult.returnValue)} gasRefund=${results.execResult.gasRefund} ]`);
     }
     /*
      * Parse results
@@ -239,15 +233,15 @@ async function _runTx(opts) {
     // Generate the bloom for the tx
     results.bloom = txLogsBloom(results.execResult.logs);
     if (this.DEBUG) {
-        debug(`Generated tx bloom with logs=${(_b = results.execResult.logs) === null || _b === void 0 ? void 0 : _b.length}`);
+        debug(`Generated tx bloom with logs=${(_a = results.execResult.logs) === null || _a === void 0 ? void 0 : _a.length}`);
     }
-    // Calculate the total gas used
+    // Caculate the total gas used
     results.gasUsed.iadd(txBaseFee);
     if (this.DEBUG) {
         debugGas(`tx add baseFee ${txBaseFee} to gasUsed (-> ${results.gasUsed})`);
     }
     // Process any gas refund
-    let gasRefund = (_c = results.execResult.gasRefund) !== null && _c !== void 0 ? _c : new ethereumjs_util_1.BN(0);
+    let gasRefund = (_b = results.execResult.gasRefund) !== null && _b !== void 0 ? _b : new ethereumjs_util_1.BN(0);
     const maxRefundQuotient = this._common.param('gasConfig', 'maxRefundQuotient');
     if (!gasRefund.isZero()) {
         const maxRefund = results.gasUsed.divn(maxRefundQuotient);
@@ -275,7 +269,7 @@ async function _runTx(opts) {
     // Update miner's balance
     let miner;
     if (this._common.consensusType() === common_1.ConsensusType.ProofOfAuthority) {
-        // Backwards-compatibility check
+        // Backwards-compatibilty check
         // TODO: can be removed along VM v6 release
         if ('cliqueSigner' in block.header) {
             miner = block.header.cliqueSigner();
@@ -318,7 +312,7 @@ async function _runTx(opts) {
     await state.cleanupTouchedAccounts();
     state.clearOriginalStorageCache();
     // Generate the tx receipt
-    const cumulativeGasUsed = ((_d = opts.blockGasUsed) !== null && _d !== void 0 ? _d : block.header.gasUsed).add(results.gasUsed);
+    const cumulativeGasUsed = ((_c = opts.blockGasUsed) !== null && _c !== void 0 ? _c : block.header.gasUsed).add(results.gasUsed);
     results.receipt = await generateTxReceipt.bind(this)(tx, results, cumulativeGasUsed);
     /**
      * The `afterTx` event

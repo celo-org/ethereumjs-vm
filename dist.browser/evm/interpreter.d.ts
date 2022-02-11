@@ -19,35 +19,37 @@ export interface RunState {
     stack: Stack;
     returnStack: Stack;
     code: Buffer;
-    shouldDoJumpAnalysis: boolean;
-    validJumps: Uint8Array;
+    validJumps: number[];
+    validJumpSubs: number[];
     stateManager: StateManager;
     eei: EEI;
-    messageGasLimit?: BN;
 }
 export interface InterpreterResult {
     runState?: RunState;
     exceptionError?: VmError;
 }
 export interface InterpreterStep {
-    pc: number;
-    opcode: {
-        name: string;
-        fee: number;
-        dynamicFee?: BN;
-        isAsync: boolean;
-    };
     gasLeft: BN;
     gasRefund: BN;
     stateManager: StateManager;
     stack: BN[];
     returnStack: BN[];
-    account: Account;
-    address: Address;
+    pc: number;
     depth: number;
+    address: Address;
     memory: Buffer;
     memoryWordCount: BN;
+    opcode: {
+        name: string;
+        fee: number;
+        isAsync: boolean;
+    };
+    account: Account;
     codeAddress: Address;
+}
+interface JumpDests {
+    jumps: number[];
+    jumpSubs: number[];
 }
 /**
  * Parses and executes EVM bytecode.
@@ -73,6 +75,7 @@ export default class Interpreter {
      * Get info for an opcode from VM's list of opcodes.
      */
     lookupOpInfo(op: number): Opcode;
-    _runStepHook(dynamicFee: BN, gasLeft: BN): Promise<void>;
-    _getValidJumpDests(code: Buffer): Uint8Array;
+    _runStepHook(): Promise<void>;
+    _getValidJumpDests(code: Buffer): JumpDests;
 }
+export {};

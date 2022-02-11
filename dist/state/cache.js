@@ -6,12 +6,10 @@ const Tree = require('functional-red-black-tree');
  * @ignore
  */
 class Cache {
-    constructor(opts) {
+    constructor(trie) {
         this._cache = Tree();
-        this._getCb = opts.getCb;
-        this._putCb = opts.putCb;
-        this._deleteCb = opts.deleteCb;
         this._checkpoints = [];
+        this._trie = trie;
     }
     /**
      * Puts account to cache under its address.
@@ -57,6 +55,14 @@ class Cache {
         return false;
     }
     /**
+     * Looks up address in underlying trie.
+     * @param address - Address of account
+     */
+    async _lookupAccount(address) {
+        const rlp = await this._trie.get(address.buf);
+        return rlp ? ethereumjs_util_1.Account.fromRlpSerializedAccount(rlp) : undefined;
+    }
+    /**
      * Looks up address in cache, if not found, looks it up
      * in the underlying trie.
      * @param key - Address of account
@@ -64,7 +70,7 @@ class Cache {
     async getOrLoad(address) {
         let account = this.lookup(address);
         if (!account) {
-            account = await this._getCb(address);
+            account = await this._lookupAccount(address);
             if (account) {
                 this._update(address, account, false, false, false);
             }
@@ -75,6 +81,26 @@ class Cache {
             }
         }
         return account;
+    }
+    /**
+     * Warms cache by loading their respective account from trie
+     * and putting them in cache.
+     * @param addresses - Array of addresses
+     */
+    async warm(addresses) {
+        for (const addressHex of addresses) {
+            if (addressHex) {
+                const address = new ethereumjs_util_1.Address(Buffer.from(addressHex, 'hex'));
+                let account = await this._lookupAccount(address);
+                if (account) {
+                    this._update(address, account, false, false, false);
+                }
+                else {
+                    account = new ethereumjs_util_1.Account();
+                    this._update(address, account, false, false, true);
+                }
+            }
+        }
     }
     /**
      * Flushes cache by updating accounts that have been modified
@@ -88,7 +114,7 @@ class Cache {
                 it.value.modified = false;
                 const accountRlp = it.value.val;
                 const keyBuf = Buffer.from(it.key, 'hex');
-                await this._putCb(keyBuf, accountRlp);
+                await this._trie.put(keyBuf, accountRlp);
                 next = it.hasNext;
                 it.next();
             }
@@ -98,7 +124,7 @@ class Cache {
                 it.value.virtual = true;
                 it.value.val = new ethereumjs_util_1.Account().serialize();
                 const keyBuf = Buffer.from(it.key, 'hex');
-                await this._deleteCb(keyBuf);
+                await this._trie.del(keyBuf);
                 next = it.hasNext;
                 it.next();
             }

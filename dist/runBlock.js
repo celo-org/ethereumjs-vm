@@ -314,13 +314,7 @@ exports.rewardAccount = rewardAccount;
  * Returns the encoded tx receipt.
  */
 function encodeReceipt(tx, receipt) {
-    var _a;
-    const encoded = ethereumjs_util_1.rlp.encode([
-        (_a = receipt.stateRoot) !== null && _a !== void 0 ? _a : receipt.status,
-        receipt.gasUsed,
-        receipt.bitvector,
-        receipt.logs,
-    ]);
+    const encoded = ethereumjs_util_1.rlp.encode(Object.values(receipt));
     if (!tx.supports(tx_1.Capability.EIP2718TypedTransaction)) {
         return encoded;
     }

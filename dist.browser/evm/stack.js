@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ethereumjs_util_1 = require("ethereumjs-util");
-var exceptions_1 = require("../exceptions");
+var _a = require('../exceptions'), ERROR = _a.ERROR, VmError = _a.VmError;
 /**
  * Implementation of the stack used in evm.
  */
@@ -19,19 +19,19 @@ var Stack = /** @class */ (function () {
     });
     Stack.prototype.push = function (value) {
         if (!ethereumjs_util_1.BN.isBN(value)) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.INTERNAL_ERROR);
+            throw new VmError(ERROR.INTERNAL_ERROR);
         }
         if (value.gt(ethereumjs_util_1.MAX_INTEGER)) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.OUT_OF_RANGE);
+            throw new VmError(ERROR.OUT_OF_RANGE);
         }
         if (this._store.length >= this._maxHeight) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_OVERFLOW);
+            throw new VmError(ERROR.STACK_OVERFLOW);
         }
         this._store.push(value);
     };
     Stack.prototype.pop = function () {
         if (this._store.length < 1) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         // Length is checked above, so pop shouldn't return undefined
         return this._store.pop();
@@ -44,7 +44,7 @@ var Stack = /** @class */ (function () {
     Stack.prototype.popN = function (num) {
         if (num === void 0) { num = 1; }
         if (this._store.length < num) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         if (num === 0) {
             return [];
@@ -52,29 +52,12 @@ var Stack = /** @class */ (function () {
         return this._store.splice(-1 * num).reverse();
     };
     /**
-     * Return items from the stack
-     * @param num Number of items to return
-     * @throws {@link ERROR.STACK_UNDERFLOW}
-     */
-    Stack.prototype.peek = function (num) {
-        if (num === void 0) { num = 1; }
-        var peekArray = [];
-        for (var peek = 1; peek <= num; peek++) {
-            var index = this._store.length - peek;
-            if (index < 0) {
-                throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
-            }
-            peekArray.push(this._store[index]);
-        }
-        return peekArray;
-    };
-    /**
      * Swap top of stack with an item in the stack.
      * @param position - Index of item from top of the stack (0-indexed)
      */
     Stack.prototype.swap = function (position) {
         if (this._store.length <= position) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         var head = this._store.length - 1;
         var i = this._store.length - position - 1;
@@ -88,7 +71,7 @@ var Stack = /** @class */ (function () {
      */
     Stack.prototype.dup = function (position) {
         if (this._store.length < position) {
-            throw new exceptions_1.VmError(exceptions_1.ERROR.STACK_UNDERFLOW);
+            throw new VmError(ERROR.STACK_UNDERFLOW);
         }
         var i = this._store.length - position;
         this.push(this._store[i].clone());
