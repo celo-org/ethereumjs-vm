@@ -1,5 +1,5 @@
 {
-  "name": "@bowdo/ethereumjs-vm",
+  "name": "@ethereumjs/vm",
   "version": "5.7.1-celo1",
   "description": "An Ethereum VM implementation",
   "license": "MPL-2.0",
