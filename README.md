@@ -2,7 +2,7 @@
   <img src="https://user-images.githubusercontent.com/47108/78779352-d0839500-796a-11ea-9468-fd2a0b3fe1ef.png" width=280>
 </p>
 
-# EthereumJS Monorepo
+# EthereumJS Monorepo (celo fork)
 
 [![Code Coverage][coverage-badge]][coverage-link]
 [![Discord][discord-badge]][discord-link]
@@ -10,6 +10,7 @@
 This was originally the EthereumJS VM repository. On Q1 2020 we brought some of its building blocks together to simplify development. Below you can find the packages included in this repository.
 
 🚧 Please note that the `master` branch is updated on a daily basis, and to inspect code related to a specific package version, refer to the [tags](https://github.com/ethereumjs/ethereumjs-monorepo/tags).
+
 
 | package                                     | npm                                                         | issues                                                                  | tests                                                                  | coverage                                                                |
 | ------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -23,6 +24,19 @@ This was originally the EthereumJS VM repository. On Q1 2020 we brought some of 
 | [@ethereumjs/tx][tx-package]                 | [![NPM Package][tx-npm-badge]][tx-npm-link]                 | [![Tx Issues][tx-issues-badge]][tx-issues-link]                         | [![Actions Status][tx-actions-badge]][tx-actions-link]                 | [![Code Coverage][tx-coverage-badge]][tx-coverage-link]                 |
 | [ethereumjs-util][util-package]                 | [![NPM Package][util-npm-badge]][util-npm-link]                 | [![Util Issues][util-issues-badge]][util-issues-link]                         | [![Actions Status][util-actions-badge]][util-actions-link]                 | [![Code Coverage][util-coverage-badge]][util-coverage-link] 
 | [@ethereumjs/vm][vm-package]                 | [![NPM Package][vm-npm-badge]][vm-npm-link]                 | [![VM Issues][vm-issues-badge]][vm-issues-link]                         | [![Actions Status][vm-actions-badge]][vm-actions-link]                 | [![Code Coverage][vm-coverage-badge]][vm-coverage-link]                 |
+
+## Celo specific changes
+
+This fork currently targets only the `@ethereumjs/vm` and makes it compatible by adding a few celo specific precompiles.
+The package is published at `@celo/ethereumjs-vm` and should be used in `packages.json` dependencies as follows, for best results:
+
+```
+{
+    "dependencies": {
+        "@ethereumjs/vm": "node:@celo/ethereumjs-vm"
+    }
+}
+```
 
 ## Coverage report
 
