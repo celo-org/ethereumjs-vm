@@ -48,7 +48,7 @@
     "ethereumjs-common": "^1.5.0",
     "ethereumjs-tx": "^2.1.1",
     "ethereumjs-util": "^6.1.0",
-    "merkle-patricia-tree": "^2.1.2"
+    "merkle-patricia-tree": "^4.0.0"
   },
   "devDependencies": {
     "@ethereumjs/config-nyc": "^1.1.1",
